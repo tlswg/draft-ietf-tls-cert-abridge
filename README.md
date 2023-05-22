@@ -25,7 +25,7 @@ Note that as this draft specifies a compression scheme, it does not impact the n
 
 As root and intermediate Certificates typically have multi-year lifetime, the churn in the CCADB is relatively low and a new version of this compression scheme could be minted at yearly intervals, with the only change being the CCADB list used. Further, as this scheme separates trust negotiation from compression, its possible for proposed root and intermediate certificates to be included in the compression scheme ahead of any public trust decisions, allowing them to benefit from compression from the very first day of use.
 
-## Status
+## Preliminary Evaluation
 
 This draft is very much a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available.
 
@@ -37,6 +37,14 @@ This draft is very much a work in progress, however a preliminary evaluation bas
 | TLS Cert Compression & Only End-Entity TLS Certificate | 1469                | 37%           |
 | **This Draft, Naive Implementation**                   | **1351**            | **34%**       |
 | **This Draft, Optimized Implementation**               | **949**             | **24%**       |
+
+Performance is also greatly enhanced at the tails. For the optimized implementation:
+
+| Percentile      | Original  | This Draft    | Relative Size |
+|-----------------|-----------|---------------|---------------|
+| 5th             | 2755      | 641           | 23%           |
+| 50th            | 4022      | 949           | 24%           |
+| 95th            | 5801      | 1613          | 28%           |
 
 ## Relationship to other drafts
 

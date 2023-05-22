@@ -120,6 +120,13 @@ This draft is very much a work in progress, however a preliminary evaluation bas
   | **This Draft, Naive Implementation**                   | 1351                | 34%           |
   | **This Draft, Optimized Implementation**               | 949                 | 24%           |
 
+Performance is also greatly enhanced at the tails. For the optimized implementation:
+
+  | Percentile      | Original  | This Draft    | Relative Size |
+  |-----------------|-----------|---------------|---------------|
+  | 5th             | 2755      | 641           | 23%           |
+  | 50th            | 4022      | 949           | 24%           |
+  | 95th            | 5801      | 1613          | 28%           |
 
 # Deployment Considerations
 
