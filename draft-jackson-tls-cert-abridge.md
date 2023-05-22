@@ -110,16 +110,16 @@ Method 2 requires more custom code, but reduces the storage footprint and delive
 
 This draft is very much a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available.
 
-```
-| Compression Method                                     | Median Size (Bytes) | Relative Size |
-|--------------------------------------------------------|---------------------|---------------|
-| Original, without any form of compression              | 4022                | 100%          |
-| Using TLS Certificate Compression with zstd            | 3335                | 83%           |
-| Transmitting only the End-Entity TLS Certificate       | 1664                | 41%           |
-| TLS Cert Compression & Only End-Entity TLS Certificate | 1469                | 37%           |
-| **This Draft, Naive Implementation**                   | 1351                | 34%           |
-| **This Draft, Optimized Implementation**               | 949                 | 24%           |
-```
+
+  | Compression Method                                     | Median Size (Bytes) | Relative Size |
+  |--------------------------------------------------------|---------------------|---------------|
+  | Original, without any form of compression              | 4022                | 100%          |
+  | Using TLS Certificate Compression with zstd            | 3335                | 83%           |
+  | Transmitting only the End-Entity TLS Certificate       | 1664                | 41%           |
+  | TLS Cert Compression & Only End-Entity TLS Certificate | 1469                | 37%           |
+  | **This Draft, Naive Implementation**                   | 1351                | 34%           |
+  | **This Draft, Optimized Implementation**               | 949                 | 24%           |
+
 
 # Deployment Considerations
 
