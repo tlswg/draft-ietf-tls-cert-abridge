@@ -9,8 +9,8 @@ number:
 date:
 consensus: true
 v: 3
-area: Security
-workgroup: TLS
+area: "Security"
+workgroup: "Transport Layer Security"
 # keyword:
 #  - next generation
 #  - unicorn
