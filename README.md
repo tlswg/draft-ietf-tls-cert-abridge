@@ -7,9 +7,6 @@ This drafts defines WebPKI specific compression scheme for use in [TLS Certifica
 As the scheme removes the overhead of including root and intermediate certificates in the TLS handshake, it paves the way for a transition to PQ TLS certificates and has an outsized impact on QUIC's performance due to magnification limits on the server's response. This compression scheme may also be of interest in other situations where certificate chains are stored, for example in the operation of Certificate Transparency logs.
 
 * [Editor's Copy](https://dennisjackson.github.io/draft-jackson-tls-cert-abridge/#go.draft-jackson-tls-cert-abridge.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-jackson-tls-cert-abridge)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-jackson-tls-cert-abridge)
-* [Compare Editor's Copy to Individual Draft](https://dennisjackson.github.io/draft-jackson-tls-cert-abridge/#go.draft-jackson-tls-cert-abridge.diff)
 
 ## Preliminary Evaluation
 
@@ -34,20 +31,9 @@ Performance is also greatly enhanced at the tails. For the optimized implementat
 
 ## Contributing
 
-See the
-[guidelines for contributions](https://github.com/dennisjackson/draft-jackson-tls-cert-abridge/blob/main/CONTRIBUTING.md).
+See the [guidelines for contributions](https://github.com/dennisjackson/draft-jackson-tls-cert-abridge/blob/main/CONTRIBUTING.md).
 
-Contributions can be made by creating pull requests.
-The GitHub interface supports creating pull requests using the Edit (✏) button.
+Contributions can be made by creating pull requests. The GitHub interface supports creating pull requests using the Edit (✏) button. 
 
-## Command Line Usage
-
-Formatted text and HTML versions of the draft can be built using `make`.
-
-```sh
-$ make
-```
-
-Command line usage requires that you have the necessary software installed.  See
-[the instructions](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
+Formatted text and HTML versions of the draft can be built using `make`. Command line usage requires that you have the necessary software installed.  See [the instructions](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
 

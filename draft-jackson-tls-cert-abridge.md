@@ -41,28 +41,15 @@ As the scheme removes the overhead of including root and intermediate certificat
 
 # Introduction
 
-## Motivation
+When a server responds to a TLS Client Hello, its initial flight of packets is limited in size by the underlying transport protocol. If the initial flight of packets exceeds the size limit, the server must wait for the client to acknowledge receipt, incurring the latency penalty of an additional round trip before the handshake can complete. In TLS, the majority of the server’s initial flight consists of the certificate chain and consequently reducing the size of this chain to below the initial size limit can deliver substantial performance improvements. 
 
-The majority of the bytes transmitted in a TLS handshake consist of the certificate chain sent by the server.
+For TLS handshakes over TCP, the maximum size of the server’s initial flight is typically around 15,000 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes ([RFC 9000](https://datatracker.ietf.org/doc/rfc9000/), Section 8.1). Without compression compression, roughly 35% of certificate chains in use on the WebPKI today are already larger than the QUIC limit of 4500 bytes. [Fastly Article by Patrick McManus](https://www.fastly.com/blog/quic-handshake-tls-compression-certificates-extension-study), [22 paper](https://ilab-pub.imp.fu-berlin.de/papers/nthms-ibtcq-22.pdf) . 
 
-TODO: TCP Congestion Window (See ICA Draft Introduction for references)
+With the upcoming transition to post-quantum primitives, this challenge is magnified with the NIST PQ signatures ranging between 10 times and 40 times the size of current elliptic curve signatures, but we cannot expect any change in the size limits imposed by the transport protocol. [Cloudflare article by Bas](https://blog.cloudflare.com/sizing-up-post-quantum-signatures/)  
 
-This overhead contributes to handshake latency and has a particular impact on QUIC which is limited in how much data can be sent by the server in their initial response to a client hello (3x the client hello size) ([RFC 9000](https://datatracker.ietf.org/doc/rfc9000/), Section 8.1). Previous research [paper](https://ilab-pub.imp.fu-berlin.de/papers/nthms-ibtcq-22.pdf) has characterised this impact and found that roughly 1/3rd of handshakes exceed this size limit, motivating the use of certificate compression or the risky choice of CDNs to use a greater amplification factor which permits more powerful DDOS attacks.
+Existing Certificate Compression and Intermediate Cert Suppression have been proposed to tackle this issue but don’t come close. 
 
-TODO: Fastly Article by Patrick McManus.
-
-This problem grows more severe with the likely switch to post-quantum signatures in TLS certificates, as the certificate chain would likely grow in size X times, but the size of the initial client hello cannot grow past the maximum MTU of Y.
-
-## Sketch
-
-Unlike existing TLS Certificate Compression schemes which use generic compression algorithms, this draft makes use of a WebPKI
-specific compression scheme. Specifically, a listing of all intermediate and root WebPKI certificates obtained from the [Common CA Database (CCADB)](https://www.ccadb.org/) is taken at a point in time (e.g. January 1st of the preceding year) and then used as a compression dictionary in conjunction with existing compression schemes like zstd. As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
-
-This draft currently proposes two distinct schemes. The intent is that all but one of these will be removed prior to progression of the draft, pending further discussion.
-
-The first is optimised for ease of implementation and is simply the use of zstd with dictionary built directly from the CCADB list. It is extremely easy to implement and deploy, but imposes a storage overhead on clients who will likely store duplicate data since they will likely have to retain both the decompression dictionary and their own copy of the roots and intermediate certificates for use in certificate verification.
-
-The second requires a more involved implementation, but reduces the storage costs on clients and is more efficient. It operates in two passes. The first pass replaces intermediate and root certiifcates with short identifies (similar to cTLS) and the second pass compresses the resulting chain with a zstd dictionary trained from end-entity certificates.
+This draft instead proposes a WebPKI specific compression scheme. Specifically, a listing of all intermediate and root WebPKI certificates obtained from the [Common CA Database (CCADB)](https://www.ccadb.org/) is taken at a point in time (e.g. January 1st of the preceding year) and then used as a compression dictionary in conjunction with existing compression schemes like zstd. As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
 
 Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it.
 
@@ -79,6 +66,8 @@ The intent of this draft is to provide a compelling alternative to [draft-kampan
 [Compact TLS, (cTLS)](https://www.ietf.org/archive/id/draft-ietf-tls-ctls-08.html) defines a version of TLS1.3 which allows a pre-configured client and server to establish a session with minimal overhead on the wire. In particular, it supports the use of a predefined list of certificates known to both parties which can be compressed. However, cTLS is still at an early stage and may be challenging to deploy in a WebPKI context due to the need for clients and servers to agree on the profile template to be used in the handshake.
 
 TODO https://www.rfc-editor.org/info/rfc7924
+
+TODO https://datatracker.ietf.org/doc/rfc9191/
 
 ## Status
 
