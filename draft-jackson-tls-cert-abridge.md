@@ -33,16 +33,40 @@ informative:
 
 --- abstract
 
-This is the working area for the individual Internet-Draft, "Abridged Certificate Compression for the WebPKI".
-It defines a compression scheme suitable for use in TLS Certificate Compression {{RFC8879}} which uses WebPKI specific information to deliver a substantial improvement over the existing generic compression schemes in use today whilst being careful to ensure CAs and website operators are treated equitably.
+This drafts defines a WebPKI specific scheme for use in TLS Certificate Compression {{RFC8879}}. The compression scheme relies on a static dictionary consisting of a snapshot of the root and intermediate certificates used in the WebPKI. The result is a dramatic improvement over the existing generic compression schemes used in TLS, equitable for both CAs and website operators and avoids the need for trust negotiation or additional error handling. 
 
-As well as substantially decreasing the size of the end-entity TLS certificate, this draft also compresses any intermediate or root Certificate used in the Web PKI to a couple of bytes. This not only reduces the latency of TLS session establishment in general, but has an outsized impact on QUIC handshakes due to the magnification limits on the server's response. It also allows for an easy transition to Post-Quantum TLS Certificates since intermediate and root certificates no longer contribute to packet size on the wire. This draft may also be useful in other situations where certificate chains are stored, for example, in the operation of Certificate Transparency logs.
+As the scheme removes the overhead of including root and intermediate certificates in the TLS handshake, it paves the way for a transition to TLS certificates using post-quantum signatures and has an outsized impact on QUIC's handshake latency due to the magnification limits on the size of the server's response. This compression scheme may also be of interest in other situations where certificate chains are stored, for example in the operation of Certificate Transparency logs.
 
 --- middle
 
 # Introduction
 
-TODO Introduction
+## Motivation
+
+The majority of the bytes transmitted in a TLS handshake consist of the certificate chain sent by the server. 
+
+TODO: TCP Congestion Window (See ICA Draft Introduction for references)
+
+This overhead contributes to handshake latency and has a particular impact on QUIC which is limited in how much data can be sent by the server in their initial response to a client hello (3x the client hello size) ([RFC 9000](https://datatracker.ietf.org/doc/rfc9000/), Section 8.1). Previous research [paper](https://ilab-pub.imp.fu-berlin.de/papers/nthms-ibtcq-22.pdf) has characterised this impact and found that roughly 1/3rd of handshakes exceed this size limit, motivating the use of certificate compression or the risky choice of CDNs to use a greater amplification factor which permits more powerful DDOS attacks. 
+
+TODO: Fastly Article by Patrick McManus. 
+
+This problem grows more severe with the likely switch to post-quantum signatures in TLS certificates, as the certificate chain would likely grow in size X times, but the size of the initial client hello cannot grow past the maximum MTU of Y. 
+
+## Sketch 
+
+Unlike existing TLS Certificate Compression schemes which use generic compression algorithms, this draft makes use of a WebPKI
+specific compression scheme. Specifically, a listing of all intermediate and root WebPKI certificates obtained from the [Common CA Database (CCADB)](https://www.ccadb.org/) is taken at a point in time (e.g. January 1st of the preceding year) and then used as a compression dictionary in conjunction with existing compression schemes like zstd. As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
+
+This draft currently proposes two distinct schemes. The intent is that all but one of these will be removed prior to progression of the draft, pending further discussion.
+
+The first is optimised for ease of implementation and is simply the use of zstd with dictionary built directly from the CCADB list. It is extremely easy to implement and deploy, but imposes a storage overhead on clients who will likely store duplicate data since they will likely have to retain both the decompression dictionary and their own copy of the roots and intermediate certificates for use in certificate verification.
+
+The second requires a more involved implementation, but reduces the storage costs on clients and is more efficient. It operates in two passes. The first pass replaces intermediate and root certiifcates with short identifies (similar to cTLS) and the second pass compresses the resulting chain with a zstd dictionary trained from end-entity certificates.
+
+Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it.
+
+As root and intermediate Certificates typically have multi-year lifetime, the churn in the CCADB is relatively low and a new version of this compression scheme could be minted at yearly intervals, with the only change being the CCADB list used. Further, as this scheme separates trust negotiation from compression, its possible for proposed root and intermediate certificates to be included in the compression scheme ahead of any public trust decisions, allowing them to benefit from compression from the very first day of use.
 
 ## Related Work
 
@@ -54,12 +78,17 @@ The intent of this draft is to provide a compelling alternative to [draft-kampan
 
 [Compact TLS, (cTLS)](https://www.ietf.org/archive/id/draft-ietf-tls-ctls-08.html) defines a version of TLS1.3 which allows a pre-configured client and server to establish a session with minimal overhead on the wire. In particular, it supports the use of a predefined list of certificates known to both parties which can be compressed. However, cTLS is still at an early stage and may be challenging to deploy in a WebPKI context due to the need for clients and servers to agree on the profile template to be used in the handshake.
 
+TODO https://www.rfc-editor.org/info/rfc7924
+
+## Status
+
+This draft is very much a work in progress. Open questions are marked with the tag **Discuss**. 
 
 # Conventions and Definitions
 
 {::boilerplate bcp14-tagged}
 
-# Description
+# Abridged Compression Scheme
 
 This section is a work in progress. It currently defines two distinct approaches with differing tradeoffs but prior to progression this will need to be winnowed down to a single method.
 
