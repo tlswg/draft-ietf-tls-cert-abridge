@@ -33,7 +33,7 @@ informative:
 
 --- abstract
 
-This drafts defines a WebPKI specific scheme for use in TLS Certificate Compression {{RFC8879}}. The compression scheme relies on a static dictionary consisting of a snapshot of the root and intermediate certificates used in the WebPKI. The result is a dramatic improvement over the existing generic compression schemes used in TLS, equitable for both CAs and website operators and avoids the need for trust negotiation or additional error handling. 
+This drafts defines a WebPKI specific scheme for use in TLS Certificate Compression {{RFC8879}}. The compression scheme relies on a static dictionary consisting of a snapshot of the root and intermediate certificates used in the WebPKI. The result is a dramatic improvement over the existing generic compression schemes used in TLS, equitable for both CAs and website operators and avoids the need for trust negotiation or additional error handling.
 
 As the scheme removes the overhead of including root and intermediate certificates in the TLS handshake, it paves the way for a transition to TLS certificates using post-quantum signatures and has an outsized impact on QUIC's handshake latency due to the magnification limits on the size of the server's response. This compression scheme may also be of interest in other situations where certificate chains are stored, for example in the operation of Certificate Transparency logs.
 
@@ -43,17 +43,17 @@ As the scheme removes the overhead of including root and intermediate certificat
 
 ## Motivation
 
-The majority of the bytes transmitted in a TLS handshake consist of the certificate chain sent by the server. 
+The majority of the bytes transmitted in a TLS handshake consist of the certificate chain sent by the server.
 
 TODO: TCP Congestion Window (See ICA Draft Introduction for references)
 
-This overhead contributes to handshake latency and has a particular impact on QUIC which is limited in how much data can be sent by the server in their initial response to a client hello (3x the client hello size) ([RFC 9000](https://datatracker.ietf.org/doc/rfc9000/), Section 8.1). Previous research [paper](https://ilab-pub.imp.fu-berlin.de/papers/nthms-ibtcq-22.pdf) has characterised this impact and found that roughly 1/3rd of handshakes exceed this size limit, motivating the use of certificate compression or the risky choice of CDNs to use a greater amplification factor which permits more powerful DDOS attacks. 
+This overhead contributes to handshake latency and has a particular impact on QUIC which is limited in how much data can be sent by the server in their initial response to a client hello (3x the client hello size) ([RFC 9000](https://datatracker.ietf.org/doc/rfc9000/), Section 8.1). Previous research [paper](https://ilab-pub.imp.fu-berlin.de/papers/nthms-ibtcq-22.pdf) has characterised this impact and found that roughly 1/3rd of handshakes exceed this size limit, motivating the use of certificate compression or the risky choice of CDNs to use a greater amplification factor which permits more powerful DDOS attacks.
 
-TODO: Fastly Article by Patrick McManus. 
+TODO: Fastly Article by Patrick McManus.
 
-This problem grows more severe with the likely switch to post-quantum signatures in TLS certificates, as the certificate chain would likely grow in size X times, but the size of the initial client hello cannot grow past the maximum MTU of Y. 
+This problem grows more severe with the likely switch to post-quantum signatures in TLS certificates, as the certificate chain would likely grow in size X times, but the size of the initial client hello cannot grow past the maximum MTU of Y.
 
-## Sketch 
+## Sketch
 
 Unlike existing TLS Certificate Compression schemes which use generic compression algorithms, this draft makes use of a WebPKI
 specific compression scheme. Specifically, a listing of all intermediate and root WebPKI certificates obtained from the [Common CA Database (CCADB)](https://www.ccadb.org/) is taken at a point in time (e.g. January 1st of the preceding year) and then used as a compression dictionary in conjunction with existing compression schemes like zstd. As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
@@ -82,7 +82,7 @@ TODO https://www.rfc-editor.org/info/rfc7924
 
 ## Status
 
-This draft is very much a work in progress. Open questions are marked with the tag **Discuss**. 
+This draft is very much a work in progress. Open questions are marked with the tag **Discuss**.
 
 # Conventions and Definitions
 
