@@ -1,7 +1,7 @@
 ---
 title: "Abridged Certificate Compression for the WebPKI"
 abbrev: "Abridged Certs"
-category: info
+category: exp
 
 docname: draft-jackson-tls-cert-abridge-latest
 submissiontype: IETF  # also: "independent", "IAB", or "IRTF"
@@ -11,17 +11,14 @@ consensus: true
 v: 3
 area: "Security"
 workgroup: "Transport Layer Security"
-# keyword:
-#  - next generation
-#  - unicorn
-#  - sparkling distributed ledger
-# venue:
-#   group: WG
-#   type: Working Group
-#   mail: WG@example.com
-#   arch: https://example.com/WG
-#   github: USER/REPO
-#   latest: https://example.com/LATEST
+
+venue:
+  group: "Transport Layer Security"
+  type: "Working Group"
+  mail: "tls@ietf.org"
+  arch: "https://mailarchive.ietf.org/arch/browse/tls/"
+  github: "dennisjackson/draft-jackson-tls-cert-abridge"
+  latest: "https://dennisjackson.github.io/draft-jackson-tls-cert-abridge/draft-jackson-tls-cert-abridge.html"
 
 author:
  -
@@ -30,14 +27,14 @@ author:
     email: ietf@dennis-jackson.uk
 
 normative:
+ RFC8879:
 
 informative:
-
 
 --- abstract
 
 This is the working area for the individual Internet-Draft, "Abridged Certificate Compression for the WebPKI".
-It defines a compression scheme suitable for use in [RFC 8879: TLS Certificate Compression](https://www.rfc-editor.org/rfc/rfc8879.html) which uses WebPKI specific information to deliver a substantial improvement over the existing generic compression schemes in use today whilst being careful to ensure CAs and website operators are treated equitably.
+It defines a compression scheme suitable for use in TLS Certificate Compression {{RFC8879}} which uses WebPKI specific information to deliver a substantial improvement over the existing generic compression schemes in use today whilst being careful to ensure CAs and website operators are treated equitably.
 
 As well as substantially decreasing the size of the end-entity TLS certificate, this draft also compresses any intermediate or root Certificate used in the Web PKI to a couple of bytes. This not only reduces the latency of TLS session establishment in general, but has an outsized impact on QUIC handshakes due to the magnification limits on the server's response. It also allows for an easy transition to Post-Quantum TLS Certificates since intermediate and root certificates no longer contribute to packet size on the wire. This draft may also be useful in other situations where certificate chains are stored, for example, in the operation of Certificate Transparency logs.
 
