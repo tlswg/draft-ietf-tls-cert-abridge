@@ -105,8 +105,6 @@ Perhaps surprisingly, this approach results in a smaller wire size than the use 
 
 A key question is how to agree upon the shared dictionary in use between clients and servers. This draft proposes that a yearly snapshot in time be taken of the CCADB and this scheme versioned accordingly. That is, there would be a specific TLS Certificate Compression codepoint assigned for each year of this draft. There is likely to be little benefit from a more dynamic approach as adding certificates to these root stores is a lengthy process on the order of a year and the lifetime of a certificate within the root store is typically 5 or more years, this listing is relatively stable.
 
-TODO: Intermediate certificate lifetimes.
-
 It is also important to note that as this is only a compression scheme, it does not impact any trust decisions in the TLS handshake or perform trust negotiation. A client can offer this compression scheme whilst only trusting a subset of the certificates in the CCADB snapshot, similarly a server can offer this compression scheme whilst using a certificate chain which does not chain back to a WebPKI root. Similarly, a new root or intermediate can be included in CCADB and static dictionary at the point of application to the root stores, rather than having to wait to be approved, allowing them to benefit from this compression scheme from the very first day of trust.
 
 As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
@@ -204,6 +202,32 @@ Performance is also greatly enhanced at the tails. For the optimized implementat
 # Deployment Considerations
 
 As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
+
+* Root CAs in Microsoft's program are currently valid for between 8 and 25 years (See [3.A.3](https://learn.microsoft.com/en-us/security/trusted-root/program-requirements)). 
+* Root CAs in Mozilla's program are valid for up to 14 years [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles). Further CA operators must apply for inclusion of their new roots with at least 2 years notice.
+* Google Chrome wants this to come down to 7 years max, plus 3 year limit. for ICAs. [Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/). However no limit currently stated. 
+* Chrome require three weeks notice before a new intermediate is issued to a new organisation. [Policy](https://www.chromium.org/Home/chromium-security/root-ca-policy/)
+* Apple has no public limit [Apple](https://www.apple.com/certificateauthority/ca_program.html). Mozilla and Microsoft have no limit on Intermediate lifetime. 
+* Root process inclusion typically takes? 
+* [Digicert Blog](https://www.digicert.com/blog/googles-moving-forward-together-proposals-for-root-ca-policy) - it takes 3 years to be included and 3 years to be widely deployed. Agrees pinning is a problem. 
+* Intermediate cert inclusion typically takes?
+* Disclosure required as of July 2022 ([Mozilla Root Program Section 5.3.2](https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/policy/#53-intermediate-certificates)) - within a week of creation and prior to usage. 
+* Intermediate additions by year is (note: some duplicates / churn): 
+  * 47 in 2017  
+	* 94 in 2018
+	* 138 in 2019 
+	* 243 in 2020
+	* 166 in 2021
+	* 254 in 2022
+	* 78 in 2023 (so far)  
+* Lifetimes are typically 10 years (80%) but a sizeable minority are between 2 and 3 years (10%). 
+
+* [CCADB Cert Listings](https://www.ccadb.org/resources)
+* [Mozilla Cert Listings](https://wiki.mozilla.org/CA/Intermediate_Certificates)
+* [Firefox Distributed Intermediate Certs Listing](https://firefox.settings.services.mozilla.com/v1/buckets/security-state/collections/intermediates/records)
+* [All Public Intermediate Certs](https://ccadb.my.salesforce-sites.com/mozilla/PublicAllIntermediateCerts)
+* [Mozilla In Progress Root Inclusions](https://ccadb.my.salesforce-sites.com/mozilla/UpcomingRootInclusionsReport)
+* [Mozilla Roots in Firefox](https://ccadb.my.salesforce-sites.com/mozilla/CACertificatesInFirefoxReport)
 
 As root and intermediate Certificates typically have multi-year lifetime, the churn in the CCADB is relatively low and a new version of this compression scheme could be minted at yearly intervals, with the only change being the CCADB list used. Further, as this scheme separates trust negotiation from compression, its possible for proposed root and intermediate certificates to be included in the compression scheme ahead of any public trust decisions, allowing them to benefit from compression from the very first day of use.
 
