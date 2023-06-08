@@ -115,7 +115,7 @@ The use of this dictionary is intended to be equitable, in so far as it provides
 
 This draft defines a certificate compression mechanism suitable for use with [RFC 8879: TLS Certificate Compression](https://www.rfc-editor.org/rfc/rfc8879.html).
 
-The intent of this draft is to provide a compelling alternative to [draft-kampanakis-tls-scas](https://www.ietf.org/id/draft-kampanakis-tls-scas-latest-03.html) as it provides better compression, doesn't require any additional retries or error handling if connections fail and doesn't require clients to be frequently updated with new intermediate certificates.
+The intent of this draft is to provide a compelling alternative to [draft-kampanakis-tls-scas](https://www.ietf.org/id/draft-kampanakis-tls-scas-latest-03.html) as it provides better compression, doesn't require any additional retries or error handling if connections fail and doesn't require clients to be frequently updated with new intermediate certificates. (TODO) Also avoids the risk of servers being incentivised not to have correct certificates in the first place. 
 
 [CBOR Encoded X.509 (C509)](https://www.ietf.org/archive/id/draft-ietf-cose-cbor-encoded-cert-05.html) defines a concise alternative format for X.509 certificates. If this format were to become widely used on the WebPKI, defining an alternative version of this draft specifically for C509 certificates would be sensible.
 
@@ -201,26 +201,21 @@ Performance is also greatly enhanced at the tails. For the optimized implementat
 
 # Deployment Considerations
 
+## Management of the Shared Dictionary
+
+### Size 
+
 As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
 
-* Root CAs in Microsoft's program are currently valid for between 8 and 25 years (See [3.A.3](https://learn.microsoft.com/en-us/security/trusted-root/program-requirements)). 
-* Root CAs in Mozilla's program are valid for up to 14 years [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles). Further CA operators must apply for inclusion of their new roots with at least 2 years notice.
-* Google Chrome wants this to come down to 7 years max, plus 3 year limit. for ICAs. [Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/). However no limit currently stated. 
-* Chrome require three weeks notice before a new intermediate is issued to a new organisation. [Policy](https://www.chromium.org/Home/chromium-security/root-ca-policy/)
-* Apple has no public limit [Apple](https://www.apple.com/certificateauthority/ca_program.html). Mozilla and Microsoft have no limit on Intermediate lifetime. 
-* Root process inclusion typically takes? 
-* [Digicert Blog](https://www.digicert.com/blog/googles-moving-forward-together-proposals-for-root-ca-policy) - it takes 3 years to be included and 3 years to be widely deployed. Agrees pinning is a problem. 
-* Intermediate cert inclusion typically takes?
-* Disclosure required as of July 2022 ([Mozilla Root Program Section 5.3.2](https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/policy/#53-intermediate-certificates)) - within a week of creation and prior to usage. 
-* Intermediate additions by year is (note: some duplicates / churn): 
-  * 47 in 2017  
-	* 94 in 2018
-	* 138 in 2019 
-	* 243 in 2020
-	* 166 in 2021
-	* 254 in 2022
-	* 78 in 2023 (so far)  
-* Lifetimes are typically 10 years (80%) but a sizeable minority are between 2 and 3 years (10%). 
+### Churn 
+
+Typically around 10 or so new root certificates are introduced to the WebPKI each year. The various root programs restrict the lifetimes of these certificates, Microsoft to between 8 and 25 years [3.A.3](https://learn.microsoft.com/en-us/security/trusted-root/program-requirements), Mozilla to between 0 and 14 years [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles). Chrome has proposed a maximum lifetime of 7 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)). Some major CAs have objected to this proposed policy as the root inclusion process currently takes around 3 years from start to finish [Digicert Blog](https://www.digicert.com/blog/googles-moving-forward-together-proposals-for-root-ca-policy). Similarly, Mozilla requires CAs to apply to renew their roots with at least 2 years notice [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles).  
+
+Typically around 100 to 200 new WebPKI intermediate certificates are issued each year. No WebPKI root program currently limits the lifetime of intermediate certificates, but they are in practice capped by the lifetime of their parent root certificate. The vast majority of these certificates are issued with 10 year lifespans. A small but notable fraction (<10%) are issued with 2 or 3 year lifetimes. Chrome's Root Program has proposed that Intermediate Certificates be limited to 3 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)). 
+
+Disclosure required as of July 2022 ([Mozilla Root Program Section 5.3.2](https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/policy/#53-intermediate-certificates)) - within a week of creation and prior to usage. 
+Chrome require three weeks notice before a new intermediate is issued to a new organisation. [Policy](https://www.chromium.org/Home/chromium-security/root-ca-policy/)
+
 
 * [CCADB Cert Listings](https://www.ccadb.org/resources)
 * [Mozilla Cert Listings](https://wiki.mozilla.org/CA/Intermediate_Certificates)
