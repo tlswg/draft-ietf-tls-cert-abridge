@@ -121,6 +121,8 @@ The intent of this draft is to provide a compelling alternative to [draft-kampan
 
 This draft is very much a work in progress. Open questions are marked with the tag **DISCUSS**.
 
+**TODO** : Rename to Snappy Certs?
+
 # Conventions and Definitions
 
 {::boilerplate bcp14-tagged}
@@ -131,7 +133,7 @@ This section defines two alternative schemes. The first scheme is presented for 
 
 **DISCUSS** The intent is that the final version of this draft only describe a single scheme, after further discussion of the various tradeoffs.
 
-## Dictionary Versioning
+## Defining the Certificate Listing
 
 Both schemes rely on a shared dictionary between client and server. The primary source of this shared dictionary is a listing of root and intermediate certificates contained in the Common Certificate Database (CCADB). The CCADB is operated by Mozilla, with TODO as members.
 
@@ -153,22 +155,30 @@ As the inclusion process for new root certificates typically takes multiple year
 
 ## Method 1: Simple Baseline
 
+#### Format of Shared Dictionary
 
-
-#### Setup
-
-* Convert to the listing to pure DER and concatenate.
+Take the certificate listing defined in Section XX. Convert each certificate to DER and perform the concatenate the resulting bytes.  
 
 #### Server Usage
 
-* Compress with options...
-* Do this once at startup and cache.
-* Could be provided externally, e.g. via script or web API.
-* Recommend max compression level as little impact on decompression speed.
+When the client and server negotiate this TLS Compression Scheme as described in TODO, identified as `0xTODO`, the server MUST compress its certificate chain with zstd as described in TODO with the raw bytes  dictionary (See Section YY of zstd) defined in Section XX.  
+
+The server SHOULD use a high compression level as this is a one-time operation that can be reused for subsequent connections and has little impact on decompression speed. The server SHOULD perform this operation at startup and cache the result for future connections for performance. The server MAY rely on an external application to perform this compression (e.g. a script which provisions a file) and simply transmit the resulting bytes. 
 
 #### Client Usage
 
-* Configure zstd with the same shared dictionary.
+If the client offers this TLS Compression Scheme as described in TODO, identified as `0xTODO` and the server transmits a CompressedCertificate Message with this identifier, the client MUST decompress the contents using the zstd algorithm defined in XX and with the raw bytes dictionary described in Section XX of zstd and Section XX of this draft. The client MUST follow the requirements of TLS Cert Compression with respect to size. 
+
+#### Discussion 
+
+This baseline scheme strives for simplicity: 
+
+* The dictionary is easy to format and ship as raw bytes . 
+* The implementation is near identical to the existing zstd TLS Certificate Compression, with the addition of the dictionary parameter. 
+
+However, it does have some drawbacks, notably: 
+
+* WebPKI clients that already have a copy of their trusted roots and intermediates must pay the storage cost of a second copy of these certificates. 
 
 ## Method 2: Optimized
 
