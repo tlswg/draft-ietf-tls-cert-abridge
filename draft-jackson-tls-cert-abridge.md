@@ -235,19 +235,13 @@ Chrome require three weeks notice before a new intermediate is issued to a new o
 
 As root and intermediate Certificates typically have multi-year lifetime, the churn in the CCADB is relatively low and a new version of this compression scheme could be minted at yearly intervals, with the only change being the CCADB list used. Further, as this scheme separates trust negotiation from compression, its possible for proposed root and intermediate certificates to be included in the compression scheme ahead of any public trust decisions, allowing them to benefit from compression from the very first day of use.
 
-# Security Considerations
+## Appendix: Independent Extension?
 
-Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it
-
-
-# IANA Considerations
-
-This document has no IANA actions.
-
-
---- back
-
-# Acknowledgments
-{:numbered="false"}
-
-TODO acknowledge.
+* A scheme is an u16 id, a u16 major version and a u16 minor version.
+  * Adding to a dictionary is a minor version bump.
+  * Removing from a dictionary is a major version bump.
+  * Expected: minor bump every month, major bump every year.
+* CH: Convey a list of schemes.
+* SH:
+  * Select a version from the CH list.
+  * Selected version must match on scheme id and major version and be equal to or less than the minor version.
