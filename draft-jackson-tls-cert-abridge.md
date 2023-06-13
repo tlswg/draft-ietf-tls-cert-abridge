@@ -133,9 +133,11 @@ This section defines two alternative schemes. The first scheme is presented for 
 
 **DISCUSS** The intent is that the final version of this draft only describe a single scheme, after further discussion of the various tradeoffs.
 
+**DISCUSS** Both of the methods in this draft rely on zstd with a shared dictionary, however they are agnostic as to the algorithm as long as it supports the use of an application-specified dictionary. Is there an argument for using a difference scheme? 
+
 ## Defining the Certificate Listing
 
-Both schemes rely on a shared dictionary between client and server. The primary source of this shared dictionary is a listing of root and intermediate certificates contained in the Common Certificate Database (CCADB). The CCADB is operated by Mozilla, with TODO as members.
+Both schemes rely on a shared dictionary between client and server. The primary source of this shared dictionary is a listing of root and intermediate certificates contained in the Common Certificate Database (CCADB). The CCADB is operated by Mozilla, with TODO as members. Further detail on the CCADB is described in Appendix TODO. 
 
 This draft defines following procedure for enumerating the certificates in the dictionary on a particular cutoff date:
 
@@ -153,11 +155,20 @@ As the inclusion process for new root certificates typically takes multiple year
 
 **DISCUSS:** Will static versioning be sufficient? If it is felt that new dictionaries might want to be introduced more frequently than yearly, this draft would be better recast as its own TLS extension. A sketch of what that might look like is defined in Appendix TODO.
 
-## Method 1: Simple Baseline
+## Scheme 1: Simple Baseline
+
+Advantages: 
+
+* The dictionary is easy to format and ship as raw bytes . 
+* The implementation is near identical to the existing zstd TLS Certificate Compression, with the addition of the dictionary parameter. 
+
+Drawbacks: 
+
+* WebPKI clients that already have a copy of their trusted roots and intermediates must pay the storage cost of a second copy of these certificates. 
 
 #### Format of Shared Dictionary
 
-Take the certificate listing defined in Section XX. Convert each certificate to DER and perform the concatenate the resulting bytes.  
+Take the certificate listing defined in Section XX. Convert each certificate to DER and concatenate the bytes. The result will be passed directly to zstd as a raw dictionary. 
 
 #### Server Usage
 
@@ -169,78 +180,69 @@ The server SHOULD use a high compression level as this is a one-time operation t
 
 If the client offers this TLS Compression Scheme as described in TODO, identified as `0xTODO` and the server transmits a CompressedCertificate Message with this identifier, the client MUST decompress the contents using the zstd algorithm defined in XX and with the raw bytes dictionary described in Section XX of zstd and Section XX of this draft. The client MUST follow the requirements of TLS Cert Compression with respect to size. 
 
-#### Discussion 
+## Scheme 2: Footprint Optimisation
 
-This baseline scheme strives for simplicity: 
+Advantages: 
 
-* The dictionary is easy to format and ship as raw bytes . 
-* The implementation is near identical to the existing zstd TLS Certificate Compression, with the addition of the dictionary parameter. 
+* Clients which already ship a subset of the certificate listing for other purposes can reuse this data rather than having to ship a duplicate. 
 
-However, it does have some drawbacks, notably: 
+Disadvantages: 
 
-* WebPKI clients that already have a copy of their trusted roots and intermediates must pay the storage cost of a second copy of these certificates. 
+* Greater implementation complexity. 
 
-## Method 2: Optimized
+#### Format of the Shared Dictionary
 
-#### Setup
+Take the certificate listing defined in Section XX. Assign a two-byte identifier according to a lexicographic ordering, starting from 0x0000 and proceeding consecutively. Let the id of a cert be written `id(cert)`. 
 
-* Do the lexicographic ordering and assign a two-byte identifier in sequence.
-* Do CT-fetch and train keyed zstd dictionary
-  * TODO - Consider a systematic construction based on per-intermediate known extensions and/or profiles.
+TODO: Take 100,000 certificates sampled from certificate transparency logs and submitted between XX and YY dates according to the following algorithm. Extract the end entity certificates and redact any domain entries. Train a zstd dictionary on the result. 
 
+TODO: Define a systematic way of building a smaller zstd dictionary based on certificate profiles, subject key identifiers, etc. Alternatively could ask CAs to profile a compression profile? 
 
-#### Operation
+#### Compression
 
 * Do keyword substitution on certificate chain, replacing certificate chain with 3 byte identifier where possible.
 * Do keyed zstd dictionary on the remaining file.
 
-## Tradeoffs and Open Questions
+**Decompression**
 
-Method 1 is very simple to implement, but isn't quite as efficient and imposes an additional storage requirement on clients.
-It can likely be deployed as-is with minimal changes to all existing implementations.
+* Do keyed zstd dictionary on the message. 
+* Do keyword substitution. 
 
-Method 2 requires more custom code, but reduces the storage footprint and delivers a better compression ratio.
-
-#### Bikeshedding Opportunities
-
-* zstd vs brotli
-*
-
-# Expected Benefits
+## Preliminary Evaluation
 
 This draft is very much a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available.
 
 
-  | Compression Method                                     | Median Size (Bytes) | Relative Size |
-  |--------------------------------------------------------|---------------------|---------------|
-  | Original, without any form of compression              | 4022                | 100%          |
-  | Using TLS Certificate Compression with zstd            | 3335                | 83%           |
-  | Transmitting only the End-Entity TLS Certificate       | 1664                | 41%           |
-  | TLS Cert Compression & Only End-Entity TLS Certificate | 1469                | 37%           |
-  | **This Draft, Naive Implementation**                   | 1351                | 34%           |
-  | **This Draft, Optimized Implementation**               | 949                 | 24%           |
+| Compression Method                                     | Median Size (Bytes) | Relative Size |
+| ------------------------------------------------------ | ------------------- | ------------- |
+| Original, without any form of compression              | 4022                | 100%          |
+| Using TLS Certificate Compression with zstd            | 3335                | 83%           |
+| Transmitting only the End-Entity TLS Certificate       | 1664                | 41%           |
+| TLS Cert Compression & Only End-Entity TLS Certificate | 1469                | 37%           |
+| **This Draft, Scheme 1 - Baseline**                    | 1351                | 34%           |
+| **This Draft, Scheme 2- Footprint**                    | 949                 | 24%           |
 
 Performance is also greatly enhanced at the tails. For the optimized implementation:
 
-  | Percentile      | Original  | This Draft    | Relative Size |
-  |-----------------|-----------|---------------|---------------|
-  | 5th             | 2755      | 641           | 23%           |
-  | 50th            | 4022      | 949           | 24%           |
-  | 95th            | 5801      | 1613          | 28%           |
+| Percentile | Original | Scheme 2, This Draft | Relative Size |
+| ---------- | -------- | -------------------- | ------------- |
+| 5th        | 2755     | 641                  | 23%           |
+| 50th       | 4022     | 949                  | 24%           |
+| 95th       | 5801     | 1613                 | 28%           |
 
-# Security Considerations
+## Security Considerations
 
 Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it
 
-
-# IANA Considerations
+## IANA Considerations
 
 This document has no IANA actions.
 
 
 --- back
 
-# Acknowledgments
+## Acknowledgments
+
 {:numbered="false"}
 
 TODO acknowledge.
