@@ -127,13 +127,30 @@ This draft is very much a work in progress. Open questions are marked with the t
 
 # Abridged Compression Scheme
 
-This section is a work in progress. It currently defines two distinct approaches with differing tradeoffs but prior to progression this will need to be winnowed down to a single method.
+This section defines two alternative schemes. The first scheme is presented for its simplicity and ease of implementation. The intent is that this scheme is used as a baseline for whether more complex schemes justify any improved properties. The second scheme is moderately more complex but allows client implementations to reuse existing stores of root and intermediate certificates without having to ship a second copy formatted for use in the dictionary.
 
-## Versioning
+**DISCUSS** The intent is that the final version of this draft only describe a single scheme, after further discussion of the various tradeoffs.
 
-* Take the listing available here. (TODO)
+## Dictionary Versioning
 
-## Method 1: Naive
+Both schemes rely on a shared dictionary between client and server. The primary source of this shared dictionary is a listing of root and intermediate certificates contained in the Common Certificate Database (CCADB). The CCADB is operated by Mozilla, with TODO as members.
+
+This draft defines following procedure for enumerating the certificates in the dictionary on a particular cutoff date:
+
+1. Lexicographically order all root and intermediate certificates contained in the CCADB as of the cutof date.
+2. Remove all certificates which do not have the TODO extendedKeyUsage extension with Y bit set.
+3. Remove all certificates whose notAfter date is on or before the cutoff date.
+4. Remove all roots which are not marked as trusted or in the process of applying to be trusted by at least one of the following Root Programs: TODO.
+5. Remove all intermediates whose parent root certificates are no longer in the listing.
+
+This listing is relatively stable and changes relatively slowly. Consequently it is expected that this listing can be versioned statically and a new TLS Certificate Compression codepoint assigned for each version, for example at a yearly cadence with a cutoff date of January 1st. Using a static listing simplifies deployment and avoids the need for any kind of negotiation as to support.
+
+As the inclusion process for new root certificates typically takes multiple years, this listing ensures that they are included ahead of time and so can be benefit from compression from the very first day of use. As both root and intermediate certificates typically have a lifespan of 10 years or more, even certificates which are issued unusually quickly will benefit from compression for the vast majority of their lifespan. Further, as this draft does not impact trust negotiation, there is no need to reflect removals from root stores in this scheme.
+
+**Commentary:** Using a cutoff date of 13th June 2023, this listing consists of X root certificates, Y intermediate certificates and occupies Z bytes in total. A copy of this listing can be found here (TODO). TODO Typical Lifespan. TODO Number added.
+
+**DISCUSS:** Will static versioning be sufficient? If it is felt that new dictionaries might want to be introduced more frequently than yearly, this draft would be better recast as its own TLS extension. A sketch of what that might look like is defined in Appendix TODO.
+
 
 #### Setup
 
