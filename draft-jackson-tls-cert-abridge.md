@@ -151,16 +151,24 @@ As the inclusion process for new root certificates typically takes multiple year
 
 **DISCUSS:** Will static versioning be sufficient? If it is felt that new dictionaries might want to be introduced more frequently than yearly, this draft would be better recast as its own TLS extension. A sketch of what that might look like is defined in Appendix TODO.
 
+## Method 1: Simple Baseline
+
+
 
 #### Setup
 
-* Convert to DER and concatenate.
-* Pass the resulting blob to Zstd
+* Convert to the listing to pure DER and concatenate.
 
-#### Operation
+#### Server Usage
 
-* Recommend use of max compression level since it is a start-up operation on the TLS Server and doesn't impact decompression speed.
-* Use zstd with dict.
+* Compress with options...
+* Do this once at startup and cache.
+* Could be provided externally, e.g. via script or web API.
+* Recommend max compression level as little impact on decompression speed.
+
+#### Client Usage
+
+* Configure zstd with the same shared dictionary.
 
 ## Method 2: Optimized
 
@@ -168,6 +176,8 @@ As the inclusion process for new root certificates typically takes multiple year
 
 * Do the lexicographic ordering and assign a two-byte identifier in sequence.
 * Do CT-fetch and train keyed zstd dictionary
+  * TODO - Consider a systematic construction based on per-intermediate known extensions and/or profiles.
+
 
 #### Operation
 
@@ -208,21 +218,36 @@ Performance is also greatly enhanced at the tails. For the optimized implementat
   | 50th            | 4022      | 949           | 24%           |
   | 95th            | 5801      | 1613          | 28%           |
 
-# Deployment Considerations
+# Security Considerations
 
-## Management of the Shared Dictionary
+Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it
 
-### Size 
+
+# IANA Considerations
+
+This document has no IANA actions.
+
+
+--- back
+
+# Acknowledgments
+{:numbered="false"}
+
+TODO acknowledge.
+
+## Appendix: Background on the CCADB and Churn
+
+### Size
 
 As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
 
-### Churn 
+### Churn
 
-Typically around 10 or so new root certificates are introduced to the WebPKI each year. The various root programs restrict the lifetimes of these certificates, Microsoft to between 8 and 25 years [3.A.3](https://learn.microsoft.com/en-us/security/trusted-root/program-requirements), Mozilla to between 0 and 14 years [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles). Chrome has proposed a maximum lifetime of 7 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)). Some major CAs have objected to this proposed policy as the root inclusion process currently takes around 3 years from start to finish [Digicert Blog](https://www.digicert.com/blog/googles-moving-forward-together-proposals-for-root-ca-policy). Similarly, Mozilla requires CAs to apply to renew their roots with at least 2 years notice [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles).  
+Typically around 10 or so new root certificates are introduced to the WebPKI each year. The various root programs restrict the lifetimes of these certificates, Microsoft to between 8 and 25 years [3.A.3](https://learn.microsoft.com/en-us/security/trusted-root/program-requirements), Mozilla to between 0 and 14 years [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles). Chrome has proposed a maximum lifetime of 7 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)). Some major CAs have objected to this proposed policy as the root inclusion process currently takes around 3 years from start to finish [Digicert Blog](https://www.digicert.com/blog/googles-moving-forward-together-proposals-for-root-ca-policy). Similarly, Mozilla requires CAs to apply to renew their roots with at least 2 years notice [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles).
 
-Typically around 100 to 200 new WebPKI intermediate certificates are issued each year. No WebPKI root program currently limits the lifetime of intermediate certificates, but they are in practice capped by the lifetime of their parent root certificate. The vast majority of these certificates are issued with 10 year lifespans. A small but notable fraction (<10%) are issued with 2 or 3 year lifetimes. Chrome's Root Program has proposed that Intermediate Certificates be limited to 3 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)). 
+Typically around 100 to 200 new WebPKI intermediate certificates are issued each year. No WebPKI root program currently limits the lifetime of intermediate certificates, but they are in practice capped by the lifetime of their parent root certificate. The vast majority of these certificates are issued with 10 year lifespans. A small but notable fraction (<10%) are issued with 2 or 3 year lifetimes. Chrome's Root Program has proposed that Intermediate Certificates be limited to 3 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)).
 
-Disclosure required as of July 2022 ([Mozilla Root Program Section 5.3.2](https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/policy/#53-intermediate-certificates)) - within a week of creation and prior to usage. 
+Disclosure required as of July 2022 ([Mozilla Root Program Section 5.3.2](https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/policy/#53-intermediate-certificates)) - within a week of creation and prior to usage.
 Chrome require three weeks notice before a new intermediate is issued to a new organisation. [Policy](https://www.chromium.org/Home/chromium-security/root-ca-policy/)
 
 
