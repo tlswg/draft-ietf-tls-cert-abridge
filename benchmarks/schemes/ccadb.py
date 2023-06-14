@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 import logging
+from functools import lru_cache
 
 # TODO - The LE Cross Signed Root Cert isn't in the current CCADB listing. Adding it manually.
 LECrossSigned = """
@@ -47,6 +48,7 @@ def extract_der_column(path, column):
             extract = lambda x : x509.load_pem_x509_certificate(x[column].encode(), default_backend()).public_bytes(serialization.Encoding.DER)
             return [extract(x) for x in table]
 
+@lru_cache
 def get_all_mozilla_certs():
         roots = extract_der_column('data/AllMozillaRoots.csv',-1)
         roots.append(x509.load_pem_x509_certificate(LECrossSigned.encode(), default_backend()).public_bytes(serialization.Encoding.DER))
@@ -55,11 +57,13 @@ def get_all_mozilla_certs():
 
         return roots + intermediates + pending
 
+@lru_cache
 def get_all_microsoft_certs():
         roots = extract_der_column('data/AllMicrosoftRoots.csv',-1) # TODO Remove non-TLS roots.
         # TODO Intermediates
         return roots
 
+@lru_cache
 def ccadb_certs():
         certs = get_all_microsoft_certs() + get_all_mozilla_certs()
         logging.info(f"Loaded {len(certs)} certs from the CCADB lists.")
