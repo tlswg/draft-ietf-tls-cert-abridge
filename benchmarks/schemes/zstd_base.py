@@ -1,6 +1,6 @@
 import zstandard
 
-ZSTD_LEVEL = 19
+ZSTD_LEVEL = 22
 
 class zstdPython:
     def __init__(self,shared_dict=None):
@@ -30,4 +30,4 @@ class zstdPython:
         pass
 
 def zstdTrainPython(targetSize,samples):
-    return zstandard.train_dictionary(targetSize,samples,level=ZSTD_LEVEL,notifications=2,threads=-1,accel=5)
+    return zstandard.train_dictionary(targetSize,samples,level=ZSTD_LEVEL,notifications=2,threads=-1,accel=5) # TODO accel=1 is much slower but more accurate

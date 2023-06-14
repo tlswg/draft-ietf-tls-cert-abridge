@@ -17,18 +17,22 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 compressors = []
 compressors.append(schemes.simple.NullCompressor())
 compressors.append(schemes.simple.TLSCertCompression())
+compressors.append(schemes.optimised.PrefixOnly())
 compressors.append(schemes.simple.IntermediateSuppression())
 compressors.append(schemes.simple.ICAAndTLS())
 
 compressors.append(schemes.baseline.Baseline())
 
-compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=True))
-compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=True))
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=True)) # Little benefit over 3k
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=3000,redact=True))
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=True)) # Little benefit over 3k
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=True)) # Little benefit over 10k
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=True)) # Little benefit over 10k
 
-compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=False))
-compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=False))
+# Redaction doesn't make things (much) worse and avoids overfitting concerns
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=False)) # Little benefit over 3k
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=3000,redact=False))
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=False))
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=False)) # Little benefit over 10k
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=False))
 
@@ -37,8 +41,6 @@ compressors.append(schemes.optimised.PrefixAndSystematic(threshold=2000))
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=100))
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=10))
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=1))
-
-# TODO: Sprinkle some caching decorators around.
 
 data = schemes.util.load_certificates()
 data = random.sample(data,10000)

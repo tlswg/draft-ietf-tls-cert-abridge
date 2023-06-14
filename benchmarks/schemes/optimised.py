@@ -49,6 +49,23 @@ class DictCompress:
         #TODO - Needs to know to skip the first cert
         pass
 
+class PrefixOnly:
+    def __init__(self):
+        self.inner1 = DictCompress(schemes.ccadb.ccadb_certs())
+
+    def footprint(self):
+        return 0 # TODO + Overhead of microsoft certs
+
+    def name(self):
+        return f"Method 2: CA Prefix Only"
+
+    def compress(self, certList):
+        return self.inner1.compress(certList)
+
+    def decompress(self, compressed_data):
+        return self.inner1.decompress(compressed_data)
+
+
 class PrefixAndTrained:
     def __init__(self,dictSize,redact):
         self.redact = redact
