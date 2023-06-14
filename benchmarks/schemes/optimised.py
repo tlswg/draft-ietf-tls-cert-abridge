@@ -1,7 +1,6 @@
 import schemes.zstd_base
 import schemes.ccadb
 import base64
-import tempfile
 from tqdm import tqdm
 from schemes.util import load_certificates
 from schemes.certs import cert_redactor, CommonByte
@@ -11,6 +10,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from  cryptography.x509 import oid
 from cryptography.x509.extensions import ExtensionNotFound
+import zstandard
 
 class DictCompress:
     def __init__(self, entries):
@@ -54,7 +54,7 @@ class PrefixAndTrained:
         self.redact = redact
         self.dictSize = dictSize
         self.inner1 = DictCompress(schemes.ccadb.ccadb_certs())
-        self.inner2 = schemes.zstd_base.ZstdBase(shared_dict=self.buildEEDict(dictSize))
+        self.inner2 = schemes.zstd_base.zstdPython(shared_dict=self.buildEEDict(dictSize))
 
     def footprint(self):
         return self.dictSize #TODO + Overhead of non Mozilla Certs
@@ -73,24 +73,15 @@ class PrefixAndTrained:
         ee = [base64.b64decode(x[0]) for x in tqdm(data,desc="b64 decoding certs")]
         if self.redact:
             ee = [cert_redactor(x) for x in tqdm(ee,desc='Redacting end-entity certificates')]
-        with tempfile.TemporaryDirectory() as temp_dir:
-            for index, cert in tqdm(enumerate(ee),desc='Writing files for zstd dict training'):
-                file_path = f"{temp_dir}/{index}.bin"
-                with open(file_path, 'wb') as file:
-                    file.write(cert)
-            schemes.zstd_base.zstdTrain(dictSize,temp_dir)
-            with open(f"{temp_dir}/dictionary.bin",'rb') as dFile:
-                dBytes = dFile.read()
-                return dBytes
-
+        return schemes.zstd_base.zstdTrainPython(dictSize,ee)
 
 class PrefixAndSystematic:
     def __init__(self,threshold):
         self.inner1 = DictCompress(schemes.ccadb.ccadb_certs())
         self.threshold = threshold
         d = self.buildEEDict(threshold)
-        self.dictSize = d
-        self.inner2 = schemes.zstd_base.ZstdBase(shared_dict=d)
+        self.dictSize = len(d)
+        self.inner2 = schemes.zstd_base.zstdPython(shared_dict=d)
 
     def name(self):
         return f"Method 2: CA Prefix and Systematic Zstd threshold={self.threshold}"
@@ -111,4 +102,4 @@ class PrefixAndSystematic:
         ingester = CommonByte(threshold)
         for c in ee:
             ingester.ingest(c)
-        return ingester.common()
+        return zstandard.ZstdCompressionDict(ingester.common())

@@ -1,67 +1,37 @@
 import tempfile
 import subprocess
 import sys
-
+import zstandard
 # TODO: Use https://python-zstandard.readthedocs.io/en/latest/dictionaries.html
 
 ZSTD_LEVEL = 19
 
-def zstdTrain(targetSize,targetDirectory):
-    command = [
-        "zstd",
-        "--train",
-        "-r",
-        targetDirectory,
-        f"--maxdict={targetSize}",
-        f"-{ZSTD_LEVEL}",
-        "-o",
-        f"{targetDirectory}/dictionary.bin"
-    ]
-    #print(" ".join(command))
-    result = subprocess.run(command, capture_output=False,shell=False,stderr=sys.stderr)
-    #print(result.stderr)
-
-class ZstdBase:
-
+class zstdPython:
     def __init__(self,shared_dict=None):
-        self.dictBytes = shared_dict
-        if shared_dict:
-            with tempfile.NamedTemporaryFile(mode='wb', delete=False) as temp_file:
-                temp_file.write(self.dictBytes)
-            self.dictFile = temp_file.name
-        else:
-            self.dictFile = None
+        #self.dictBytes = zstandard.ZstdCompressionDict(shared_dict)
+        params = zstandard.ZstdCompressionParameters(
+            chain_log=30,
+            search_log=30,
+            hash_log=30,
+            target_length=6000,
+            threads=1,
+            compression_level=ZSTD_LEVEL,
+            force_max_window=1
+        )
+        self.comp = zstandard.ZstdCompressor(compression_params=params,dict_data=shared_dict)
 
     def name(self):
-        return "Zstd Base"
+        return "Zstd Python"
 
     def compress(self,certList):
         return self.compressBytes(b"".join(certList))
 
     def compressBytes(self, data):
-        # Note: Making a temporary file is about 20x faster than proviing the input via stdin.
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as temp_file:
-            temp_file.write(data)
-            name = temp_file.name
-        command =  [
-            "zstd",
-            "-f",
-            f"-{ZSTD_LEVEL}",
-            "-q",
-            "--single-thread",
-            "--zstd=searchLog=30",
-            "--zstd=hashLog=30",
-            "--zstd=chainLog=30",
-            "--zstd=targetLength=6000",
-        ]
-        if self.dictFile:
-            command.append('--patch-from')
-            command.append(self.dictFile)
-        command.append('-c')
-        command.append(name)
-        completed_process = subprocess.run(command, capture_output=True,shell=False)
-        return completed_process.stdout
+        return self.comp.compress(data)
 
     def decompress(self, compressed_data):
         # TODO Not Implemented
         pass
+
+def zstdTrainPython(targetSize,samples):
+    return zstandard.train_dictionary(targetSize,samples,level=ZSTD_LEVEL,notifications=2)

@@ -1,10 +1,11 @@
 import schemes.zstd_base
 import schemes.ccadb
+import zstandard
 class Baseline:
     def __init__(self):
         d = b"".join(schemes.ccadb.ccadb_certs())
         self.dictSize = len(d)
-        self.inner = schemes.zstd_base.ZstdBase(d)
+        self.inner = schemes.zstd_base.zstdPython(zstandard.ZstdCompressionDict(d))
 
     def name(self):
         return "Method 1: Baseline"

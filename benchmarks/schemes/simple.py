@@ -57,7 +57,7 @@ class IntermediateSuppression:
 import schemes.zstd_base
 class TLSCertCompression:
     def __init__(self):
-        self.inner = schemes.zstd_base.ZstdBase()
+        self.inner = schemes.zstd_base.zstdPython()
 
     def name(self):
         return "TLS Cert Compression"
