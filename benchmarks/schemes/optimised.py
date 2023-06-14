@@ -10,6 +10,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from  cryptography.x509 import oid
+from cryptography.x509.extensions import ExtensionNotFound
 
 class DictCompress:
     def __init__(self, entries):
@@ -33,10 +34,13 @@ class DictCompress:
                 compressed += self.cmap[c]
             else:
                 cert = x509.load_der_x509_certificate(c)
-                if cert.extensions.get_extension_for_oid(oid.ExtensionOID.BASIC_CONSTRAINTS).value.ca:
-                    logging.warning(f"CA Certificate {cert.subject.rfc4514_string()} issued by {cert.issuer.rfc4514_string()} not found in prefix dictionary. sha256-fingerprint={cert.fingerprint(hashes.SHA256()).hex()[:6]}")
-                    # logging.info(f"{cert.public_bytes(serialization.Encoding.PEM)}")
-                    compressed += b"\x12\x34\00\00"
+                try:
+                    if cert.extensions.get_extension_for_oid(oid.ExtensionOID.BASIC_CONSTRAINTS).value.ca:
+                        logging.warning(f"CA Certificate {cert.subject.rfc4514_string()} issued by {cert.issuer.rfc4514_string()} not found in prefix dictionary. sha256-fingerprint={cert.fingerprint(hashes.SHA256()).hex()[:6]}")
+                        # logging.info(f"{cert.public_bytes(serialization.Encoding.PEM)}")
+                        compressed += b"\x12\x34\00\00"
+                except ExtensionNotFound:
+                    pass
                 compressed += c
             first = False
         return compressed
