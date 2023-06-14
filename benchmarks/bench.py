@@ -2,6 +2,7 @@ import json
 import base64
 import schemes.simple
 import schemes.baseline
+import schemes.optimised
 import statistics
 from tqdm import tqdm
 
@@ -12,6 +13,7 @@ compressors.append(schemes.simple.TLSCertCompression())
 compressors.append(schemes.simple.ICAAndTLS())
 
 compressors.append(schemes.baseline.Baseline())
+compressors.append(schemes.optimised.Optimised())
 
 with open('data/chains.json') as json_file:
     data = json.load(json_file)

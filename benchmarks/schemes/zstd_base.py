@@ -1,6 +1,22 @@
 import tempfile
 import subprocess
 
+
+def zstdTrain(targetSize,targetDirectory):
+    command = [
+        "zstd",
+        "--train",
+        "-r",
+        targetDirectory,
+        #f"--maxdict={targetSize}", #TODO Fix
+        "-9",
+        "-o",
+        f"{targetDirectory}/dictionary.bin"
+    ]
+    #print(" ".join(command))
+    result = subprocess.run(command, capture_output=True,shell=False)
+    #print(result.stderr)
+
 class ZstdBase:
 
     def __init__(self,shared_dict=None):
@@ -15,10 +31,13 @@ class ZstdBase:
     def name(self):
         return "Zstd Base"
 
-    def compress(self, certList):
+    def compress(self,certList):
+        return self.compressBytes(b"".join(certList))
+
+    def compressBytes(self, data):
         #TODO: Change to using stdin.
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as temp_file:
-            temp_file.write(b"".join(certList))
+            temp_file.write(data)
             name = temp_file.name
         command =  [
             "zstd",
