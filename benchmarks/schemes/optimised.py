@@ -5,6 +5,12 @@ import tempfile
 from tqdm import tqdm
 from schemes.util import load_certificates
 from schemes.certs import cert_redactor, CommonByte
+import logging
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+from  cryptography.x509 import oid
+
 class DictCompress:
     def __init__(self, entries):
         self.cmap = dict()
@@ -26,7 +32,13 @@ class DictCompress:
             if c in self.cmap.keys():
                 compressed += self.cmap[c]
             else:
+                cert = x509.load_der_x509_certificate(c)
+                if cert.extensions.get_extension_for_oid(oid.ExtensionOID.BASIC_CONSTRAINTS).value.ca:
+                    logging.warning(f"CA Certificate {cert.subject.rfc4514_string()} issued by {cert.issuer.rfc4514_string()} not found in prefix dictionary. sha256-fingerprint={cert.fingerprint(hashes.SHA256()).hex()[:6]}")
+                    # logging.info(f"{cert.public_bytes(serialization.Encoding.PEM)}")
+                    compressed += b"\x12\x34\00\00"
                 compressed += c
+            first = False
         return compressed
 
     def decompress(self, compressed_data):
