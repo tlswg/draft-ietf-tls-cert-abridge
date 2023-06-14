@@ -5,6 +5,7 @@
 *.swp
 *.txt
 *.upload
+benchmarks/output.csv
 *~
 .tags
 /*-[0-9][0-9].xml
