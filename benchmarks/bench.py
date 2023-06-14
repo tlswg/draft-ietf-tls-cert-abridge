@@ -22,18 +22,20 @@ compressors.append(schemes.simple.ICAAndTLS())
 
 compressors.append(schemes.baseline.Baseline())
 
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=True))
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=True))
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=True))
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=True))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=True))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=True))
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=True)) # Little benefit over 10k
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=True)) # Little benefit over 10k
 
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=False))
-compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=False)) # Faster, redact=True shows little diff.
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=False))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=False))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=False))
+# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=False)) # Little benefit over 10k
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=False))
 
+compressors.append(schemes.optimised.PrefixAndSystematic(threshold=2000))
+#compressors.append(schemes.optimised.PrefixAndSystematic(threshold=1000)) # These are all beaten by the higher thresholds
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=100))
-compressors.append(schemes.optimised.PrefixAndSystematic(threshold=10))
+# compressors.append(schemes.optimised.PrefixAndSystematic(threshold=10))
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=1))
 
 # TODO: Sprinkle some caching decorators around.
