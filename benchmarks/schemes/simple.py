@@ -13,6 +13,9 @@ class NullCompressor:
     def decompress(self, compressed_data):
         return compressed_data
 
+from cryptography import x509
+from  cryptography.x509 import oid
+from cryptography.x509.extensions import ExtensionNotFound
 
 class IntermediateSuppression:
     def __init__(self):
@@ -22,7 +25,15 @@ class IntermediateSuppression:
         return "Intermediate Suppression"
 
     def compress(self, certList):
-        return certList[0]
+        b = b""
+        for cert in certList:
+            cert = x509.load_der_x509_certificate(c)
+            try:
+                if cert.extensions.get_extension_for_oid(oid.ExtensionOID.BASIC_CONSTRAINTS).value.ca:
+                    continue
+            except ExtensionNotFound:
+                pass
+            b += cert
 
     def decompress(self, compressed_data):
         return compressed_data
