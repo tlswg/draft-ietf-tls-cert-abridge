@@ -4,6 +4,8 @@ import sys
 
 # TODO: Use https://python-zstandard.readthedocs.io/en/latest/dictionaries.html
 
+ZSTD_LEVEL = 19
+
 def zstdTrain(targetSize,targetDirectory):
     command = [
         "zstd",
@@ -11,7 +13,7 @@ def zstdTrain(targetSize,targetDirectory):
         "-r",
         targetDirectory,
         f"--maxdict={targetSize}",
-        "-19",
+        f"-{ZSTD_LEVEL}",
         "-o",
         f"{targetDirectory}/dictionary.bin"
     ]
@@ -44,7 +46,7 @@ class ZstdBase:
         command =  [
             "zstd",
             "-f",
-            "-19",
+            f"-{ZSTD_LEVEL}",
             "-q",
             "--single-thread",
             "--zstd=searchLog=30",

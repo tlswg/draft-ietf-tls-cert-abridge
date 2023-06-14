@@ -21,40 +21,48 @@ compressors.append(schemes.simple.IntermediateSuppression())
 compressors.append(schemes.simple.ICAAndTLS())
 
 compressors.append(schemes.baseline.Baseline())
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=True))
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=True))
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=True))
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=False))
+
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=True))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=True))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=True))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=True))
+
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=False))
 compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=False)) # Faster, redact=True shows little diff.
-# compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=False))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=False))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=False))
+
 compressors.append(schemes.optimised.PrefixAndSystematic(threshold=100))
+compressors.append(schemes.optimised.PrefixAndSystematic(threshold=10))
+compressors.append(schemes.optimised.PrefixAndSystematic(threshold=1))
+
+# TODO: Sprinkle some caching decorators around.
 
 data = schemes.util.load_certificates()
-data = random.sample(data,1000)
+data = random.sample(data,5000)
 logging.info(f"Selected sample of {len(data)} certificate chains for benchmark")
 results = dict();
 for s in compressors:
-    results[s.name()] = list()
+    results[s] = list()
 
 for entry in tqdm(data,desc="Benchmarking Compression Schemes"):
     entry = [base64.b64decode(x) for x in entry]
     for scheme in compressors:
         size = len(scheme.compress(entry))
-        #print(f"{scheme.name()}= {size}")
-        results[scheme.name()].append(size)
+        results[scheme].append(size)
 
 stats = [(f"p{y}", lambda x, y=y: numpy.percentile(x, y)) for y in [5,50,95]]
 
 with open('output.csv', 'w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(['Scheme'] + [name for name, _ in stats])  # Write header row
+    writer.writerow(['Scheme', 'Storage Footprint'] + [name for name, _ in stats])  # Write header row
 
     for scheme, sizes in tqdm(results.items(),desc='Computing Confidence Intervals'):
-        row = [scheme]
+        row = [scheme.name(), scheme.footprint()]
         for statName, stat in stats:
             lower,upper = scipy.stats.bootstrap([sizes], stat, method='percentile').confidence_interval
             if upper - lower > 100:
-                logging.warning(f"Large Confidence Interval for {scheme} {statName} of [{lower:.1f},{upper:.1f}] bytes")
+                logging.warning(f"Large Confidence Interval for {scheme.name()} {statName} of [{lower:.1f},{upper:.1f}] bytes")
             row.append(upper)
         writer.writerow(row)
 

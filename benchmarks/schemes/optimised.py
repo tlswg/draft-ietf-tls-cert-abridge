@@ -56,6 +56,9 @@ class PrefixAndTrained:
         self.inner1 = DictCompress(schemes.ccadb.ccadb_certs())
         self.inner2 = schemes.zstd_base.ZstdBase(shared_dict=self.buildEEDict(dictSize))
 
+    def footprint(self):
+        return self.dictSize #TODO + Overhead of non Mozilla Certs
+
     def name(self):
         return f"Method 2: CA Prefix and Trained Zstd {self.dictSize}, redacted={self.redact}"
 
@@ -64,7 +67,6 @@ class PrefixAndTrained:
 
     def decompress(self, compressed_data):
         return self.inner1.decompress(self.inner2.decompress(compressed_data))
-
 
     def buildEEDict(self,dictSize):
         data = load_certificates()
@@ -85,10 +87,16 @@ class PrefixAndTrained:
 class PrefixAndSystematic:
     def __init__(self,threshold):
         self.inner1 = DictCompress(schemes.ccadb.ccadb_certs())
-        self.inner2 = schemes.zstd_base.ZstdBase(shared_dict=self.buildEEDict(threshold))
+        self.threshold = threshold
+        d = self.buildEEDict(threshold)
+        self.dictSize = d
+        self.inner2 = schemes.zstd_base.ZstdBase(shared_dict=d)
 
     def name(self):
-        return "Method 2: CA Prefix and Systematic Zstd"
+        return f"Method 2: CA Prefix and Systematic Zstd threshold={self.threshold}"
+
+    def footprint(self):
+        return self.dictSize # TODO + Overhead from non-Mozilla Root Stores
 
     def compress(self, certList):
         return self.inner2.compressBytes(self.inner1.compress(certList))

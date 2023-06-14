@@ -7,6 +7,9 @@ class NullCompressor:
     def name(self):
         return "Original"
 
+    def footprint(self):
+        return 0
+
     def compress(self, certList):
         return b"".join(certList)
 
@@ -26,6 +29,9 @@ class IntermediateSuppression:
 
     def name(self):
         return "Intermediate Suppression"
+
+    def footprint(self):
+        return 0
 
     def compress(self, certList):
         b = b""
@@ -56,6 +62,9 @@ class TLSCertCompression:
     def name(self):
         return "TLS Cert Compression"
 
+    def footprint(self):
+        return 0
+
     def compress(self, certList):
         compressed_data = self.inner.compress(certList)
         return compressed_data
@@ -73,6 +82,9 @@ class ICAAndTLS:
 
     def name(self):
         return "Intermediate Suppression and TLS Cert Compression"
+
+    def footprint(self):
+        return 0
 
     def compress(self, certList):
         return self.tls.compress([self.ica.compress(certList)])
