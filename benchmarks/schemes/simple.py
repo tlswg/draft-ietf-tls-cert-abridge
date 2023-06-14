@@ -17,6 +17,8 @@ from cryptography import x509
 from  cryptography.x509 import oid
 from cryptography.x509.extensions import ExtensionNotFound
 
+# This optimistically assumes that all CA certificates can be omitted.
+# TODO: More accurately, assume that only chains ending in the intersection of the root stores can be omitted.
 class IntermediateSuppression:
     def __init__(self):
         pass
@@ -26,14 +28,15 @@ class IntermediateSuppression:
 
     def compress(self, certList):
         b = b""
-        for cert in certList:
+        for c in certList:
             cert = x509.load_der_x509_certificate(c)
             try:
                 if cert.extensions.get_extension_for_oid(oid.ExtensionOID.BASIC_CONSTRAINTS).value.ca:
                     continue
             except ExtensionNotFound:
                 pass
-            b += cert
+            b += c
+        return b
 
     def decompress(self, compressed_data):
         return compressed_data
