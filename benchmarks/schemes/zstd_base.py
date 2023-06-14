@@ -30,4 +30,4 @@ class zstdPython:
         pass
 
 def zstdTrainPython(targetSize,samples):
-    return zstandard.train_dictionary(targetSize,samples,level=ZSTD_LEVEL,notifications=2,threads=-1)
+    return zstandard.train_dictionary(targetSize,samples,level=ZSTD_LEVEL,notifications=2,threads=-1,accel=5)

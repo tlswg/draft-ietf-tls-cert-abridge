@@ -2,7 +2,7 @@ import schemes.zstd_base
 import schemes.ccadb
 import base64
 from tqdm import tqdm
-from schemes.util import load_certificates
+from schemes.util import load_certificates, load_ee_certs
 from schemes.certs import cert_redactor, CommonByte
 import logging
 from cryptography import x509
@@ -69,11 +69,7 @@ class PrefixAndTrained:
         return self.inner1.decompress(self.inner2.decompress(compressed_data))
 
     def buildEEDict(self,dictSize):
-        data = load_certificates()
-        ee = [base64.b64decode(x[0]) for x in tqdm(data,desc="b64 decoding certs")]
-        if self.redact:
-            ee = [cert_redactor(x) for x in tqdm(ee,desc='Redacting end-entity certificates')]
-        return schemes.zstd_base.zstdTrainPython(dictSize,ee)
+        return schemes.zstd_base.zstdTrainPython(dictSize,load_ee_certs(self.redact))
 
 class PrefixAndSystematic:
     def __init__(self,threshold):
