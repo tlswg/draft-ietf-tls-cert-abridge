@@ -35,7 +35,7 @@ class ZstdBase:
         return self.compressBytes(b"".join(certList))
 
     def compressBytes(self, data):
-        #TODO: Change to using stdin.
+        # Note: Making a temporary file is about 20x faster than proviing the input via stdin.
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as temp_file:
             temp_file.write(data)
             name = temp_file.name
