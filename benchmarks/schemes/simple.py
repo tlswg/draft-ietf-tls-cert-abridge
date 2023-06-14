@@ -16,11 +16,12 @@ class NullCompressor:
 from cryptography import x509
 from  cryptography.x509 import oid
 from cryptography.x509.extensions import ExtensionNotFound
-
+from schemes.ccadb import get_all_mozilla_certs
 # This optimistically assumes that all CA certificates can be omitted.
 # TODO: More accurately, assume that only chains ending in the intersection of the root stores can be omitted.
 class IntermediateSuppression:
     def __init__(self):
+        self.knownCerts = get_all_mozilla_certs()
         pass
 
     def name(self):
@@ -32,9 +33,15 @@ class IntermediateSuppression:
             cert = x509.load_der_x509_certificate(c)
             try:
                 if cert.extensions.get_extension_for_oid(oid.ExtensionOID.BASIC_CONSTRAINTS).value.ca:
-                    continue
+                    if c not in self.knownCerts:
+                        # Can't use ICA flag with this chain if there's a CA cert not in Mozilla Root Store
+                        return b"".join(certList)
+                    else:
+                        # This cert will be suppressed
+                        continue
             except ExtensionNotFound:
                 pass
+            # Copy cert
             b += c
         return b
 
