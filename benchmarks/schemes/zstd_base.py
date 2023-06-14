@@ -1,6 +1,8 @@
 import tempfile
 import subprocess
+import sys
 
+# TODO: Use https://python-zstandard.readthedocs.io/en/latest/dictionaries.html
 
 def zstdTrain(targetSize,targetDirectory):
     command = [
@@ -8,13 +10,13 @@ def zstdTrain(targetSize,targetDirectory):
         "--train",
         "-r",
         targetDirectory,
-        #f"--maxdict={targetSize}", #TODO Fix
-        "-9",
+        f"--maxdict={targetSize}",
+        "-19",
         "-o",
         f"{targetDirectory}/dictionary.bin"
     ]
     #print(" ".join(command))
-    result = subprocess.run(command, capture_output=True,shell=False)
+    result = subprocess.run(command, capture_output=False,shell=False,stderr=sys.stderr)
     #print(result.stderr)
 
 class ZstdBase:
@@ -42,7 +44,7 @@ class ZstdBase:
         command =  [
             "zstd",
             "-f",
-            "-9",
+            "-19",
             "-q",
             "--single-thread",
             "--zstd=searchLog=30",
