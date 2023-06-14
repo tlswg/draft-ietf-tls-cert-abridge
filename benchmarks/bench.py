@@ -10,8 +10,8 @@ compressors.append(schemes.simple.NullCompressor())
 compressors.append(schemes.simple.IntermediateSuppression())
 compressors.append(schemes.simple.TLSCertCompression())
 compressors.append(schemes.simple.ICAAndTLS())
-compressors.append(schemes.baseline.BaselinePurePython())
-compressors.append(schemes.baseline.BaselineShell())
+
+compressors.append(schemes.baseline.Baseline())
 
 with open('data/chains.json') as json_file:
     data = json.load(json_file)

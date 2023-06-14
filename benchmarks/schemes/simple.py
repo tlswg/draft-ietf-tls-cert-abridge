@@ -5,7 +5,7 @@ class NullCompressor:
         pass
 
     def name(self):
-        return "Null"
+        return "Original"
 
     def compress(self, certList):
         return b"".join(certList)
@@ -27,21 +27,20 @@ class IntermediateSuppression:
     def decompress(self, compressed_data):
         return compressed_data
 
-import zlib
+import schemes.zstd_base
 class TLSCertCompression:
     def __init__(self):
-        pass
+        self.inner = schemes.zstd_base.ZstdBase()
 
     def name(self):
         return "TLS Cert Compression"
 
     def compress(self, certList):
-        data = b"".join(certList)
-        compressed_data = zlib.compress(data, level=9)
+        compressed_data = self.inner.compress(certList)
         return compressed_data
 
     def decompress(self, compressed_data):
-        decompressed_data = zlib.decompress(compressed_data)
+        decompressed_data = self.inner.decompress(compressed_data)
         return decompressed_data
 
 
