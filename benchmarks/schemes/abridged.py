@@ -1,5 +1,5 @@
 from schemes.internal import ZstdWrapper, DictCompress, zstandard_train_dict
-from schemes.certs import load_ee_certs, CommonCertStrings, get_all_ccadb_certs
+from schemes.certs import load_ee_certs_from_chains, CommonCertStrings, get_all_ccadb_certs
 import zstandard
 
 # TODO: These footprints don't reflect any additional storage caused by
@@ -49,7 +49,7 @@ class PrefixAndTrained:
         self.inner1 = DictCompress(get_all_ccadb_certs())
         self.inner2 = ZstdWrapper(
             shared_dict=zstandard_train_dict(
-                load_ee_certs(self.redact),
+                load_ee_certs_from_chains(self.redact),
                 dict_size,
             )
         )
@@ -58,7 +58,7 @@ class PrefixAndTrained:
         return self.dict_size
 
     def name(self):
-        return "Method 2: CA Prefix with Training redacted={self.redact}"
+        return f"Method 2: CA Prefix with Training redacted={self.redact}"
 
     def compress(self, cert_chain):
         return self.inner2.compress_bytes(self.inner1.compress(cert_chain))
@@ -89,5 +89,5 @@ class PrefixAndCommon:
 
     def build_dict(self, threshold):
         cert_strings = CommonCertStrings(threshold)
-        cert_strings.ingest_all(load_ee_certs(redact=False))
+        cert_strings.ingest_all(load_ee_certs_from_chains(redact=False))
         return zstandard.ZstdCompressionDict(cert_strings.top())

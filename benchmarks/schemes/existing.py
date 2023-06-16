@@ -35,7 +35,7 @@ class IntermediateSuppression:
             parsed_cert = parse_der_to_cert(der_bytes)
             if is_ca_cert(parsed_cert):
                 if der_bytes not in self.known_certs:
-                    # Can't use ICA flag with unknown CA cert
+                    # Can't use ICA flag with CA cert not in root store
                     return b"".join(cert_chain)
                 else:
                     # This cert will be suppressed

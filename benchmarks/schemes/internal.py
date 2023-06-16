@@ -34,9 +34,9 @@ class DictCompress:
                 parsed_cert = parse_der_to_cert(cert_bytes)
                 if is_ca_cert(parsed_cert):
                     report_missing_ca_cert(parsed_cert)
-                    # Optional: Be optimistic and assume we can compress it anyway
-                    # compressed += b"\x12\x35\xff\xff"
-                    # continue
+                    #TODO: Assumes we will be including all commonly seen CA certs
+                    compressed += b"\x12\x35\xff\xff"
+                    continue
                 compressed += cert_bytes
         return compressed
 

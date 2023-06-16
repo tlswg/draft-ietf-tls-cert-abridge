@@ -33,7 +33,7 @@ def extract_chosen_name(rfc4514_string):
 def report_missing_ca_cert(parsed_cert):
     fingerprint = parsed_cert.fingerprint(hashes.SHA256()).hex()
     if fingerprint not in MISSING_CA_CERTS:
-        logging.warning(
+        logging.debug(
             f"Missing CA Certificate {extract_chosen_name(parsed_cert.subject.rfc4514_string())}"
             f" issued by {extract_chosen_name(parsed_cert.issuer.rfc4514_string())}"
             f" with sha256-fingerprint={fingerprint[:6]}"
@@ -68,7 +68,8 @@ def load_cert_chains():
 
 
 @lru_cache
-def load_ee_certs(redact):
+def load_ee_certs_from_chains(redact):
+    #TODO: Assumes the first cert is an end-entity cert.
     end_entity_der = [base64.b64decode(x[0]) for x in load_cert_chains()]
     if redact:
         end_entity_der = [
@@ -77,6 +78,16 @@ def load_ee_certs(redact):
         ]
     return end_entity_der
 
+@lru_cache
+def load_ca_certs_from_chains():
+    ca_certs = set()
+    for chain in tqdm(load_cert_chains(),desc="Extracting CA Certificates from Chains"):
+        for cert in chain:
+            cert_bytes = base64.b64decode(cert)
+            if is_ca_cert(parse_der_to_cert(cert_bytes)):
+                ca_certs.add(cert_bytes)
+    logging.info(f"Extracted {len(ca_certs)} CA Certs from certificate chains")
+    return list(ca_certs)
 
 def extract_der_column(path, column, keep=lambda x: True):
     with open(path) as output_file:

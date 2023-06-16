@@ -33,6 +33,7 @@ def load_schemes():
     # Optimal when compared against dictionary sizes of 1k, 10k, 100k, 200k
     # Using redaction to avoid favouring certain websites
     compressors += [schemes.abridged.PrefixAndTrained(dict_size=3000, redact=True)]
+    compressors += [schemes.abridged.PrefixAndTrained(dict_size=100000, redact=True)]
 
     # Optimal when compared against thresholds of 1,10,100 and 1000
     compressors += [schemes.abridged.PrefixAndCommon(threshold=2000)]
@@ -41,7 +42,7 @@ def load_schemes():
 
 
 def load_chains():
-    return random.sample(load_cert_chains(), 10000)
+    return random.sample(load_cert_chains(), 20000)
 
 
 def benchmark(targets, chains):
@@ -74,9 +75,9 @@ def write_stats(results, out_path, stats):
                 ).confidence_interval
                 if upper - lower > 100:
                     logging.warning(
-                        f"Large CI: {scheme.name()}-{stat_name}: [{lower:.1f},{upper:.1f}]"
+                        f"Large CI for {scheme.name()}-{stat_name}: [{lower:.1f},{upper:.1f}]"
                     )
-                row.append(upper)
+                row.append(stat_fun(sizes))
             writer.writerow(row)
 
 
@@ -95,6 +96,8 @@ def main():
     )
     results = benchmark(targets, chains)
     stats = [(f"p{y}", lambda x, y=y: numpy.percentile(x, y)) for y in [5, 50, 95]]
+    for (scheme,result) in results.items():
+        results[scheme] = numpy.array(result)
     write_stats(results, "output.csv", stats)
     print()
     print(stats_to_md("output.csv"))
