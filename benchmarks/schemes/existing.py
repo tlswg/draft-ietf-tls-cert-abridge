@@ -1,0 +1,86 @@
+from schemes.internal import ZstdWrapper
+from schemes.certs import is_ca_cert, parse_der_to_cert, get_all_ccadb_certs
+
+
+class NullCompressor:
+    def __init__(self):
+        pass
+
+    def name(self):
+        return "Original"
+
+    def footprint(self):
+        return 0
+
+    def compress(self, cert_chain):
+        return b"".join(cert_chain)
+
+    def decompress(self, compressed_data):
+        return compressed_data
+
+
+class IntermediateSuppression:
+    def __init__(self):
+        self.known_certs = get_all_ccadb_certs()
+
+    def name(self):
+        return "Intermediate Suppression"
+
+    def footprint(self):
+        return 0
+
+    def compress(self, cert_chain):
+        byte_form = b""
+        for der_bytes in cert_chain:
+            parsed_cert = parse_der_to_cert(der_bytes)
+            if is_ca_cert(parsed_cert):
+                if der_bytes not in self.known_certs:
+                    # Can't use ICA flag with unknown CA cert
+                    return b"".join(cert_chain)
+                else:
+                    # This cert will be suppressed
+                    continue
+            else:
+                # Cert will be included
+                byte_form += der_bytes
+        return byte_form
+
+    def decompress(self, compressed_data):
+        return compressed_data
+
+
+class TLSCertCompression:
+    def __init__(self):
+        self.inner = ZstdWrapper()
+
+    def name(self):
+        return "TLS Cert Compression"
+
+    def footprint(self):
+        return 0
+
+    def compress(self, cert_chain):
+        compressed_data = self.inner.compress(cert_chain)
+        return compressed_data
+
+    def decompress(self, compressed_data):
+        decompressed_data = self.inner.decompress(compressed_data)
+        return decompressed_data
+
+
+class ICAAndTLS:
+    def __init__(self):
+        self.tls = TLSCertCompression()
+        self.ica = IntermediateSuppression()
+
+    def name(self):
+        return "Intermediate Suppression and TLS Cert Compression"
+
+    def footprint(self):
+        return 0
+
+    def compress(self, cert_chain):
+        return self.tls.compress([self.ica.compress(cert_chain)])
+
+    def decompress(self, compressed_data):
+        return self.ica.decompress(self.tls.decompress(compressed_data))
