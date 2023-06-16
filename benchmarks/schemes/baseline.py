@@ -1,6 +1,8 @@
 import schemes.zstd_base
 import schemes.ccadb
 import zstandard
+
+
 class Baseline:
     def __init__(self):
         d = b"".join(schemes.ccadb.ccadb_certs())

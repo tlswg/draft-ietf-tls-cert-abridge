@@ -1,5 +1,3 @@
-
-
 class NullCompressor:
     def __init__(self):
         pass
@@ -16,10 +14,13 @@ class NullCompressor:
     def decompress(self, compressed_data):
         return compressed_data
 
+
 from cryptography import x509
-from  cryptography.x509 import oid
+from cryptography.x509 import oid
 from cryptography.x509.extensions import ExtensionNotFound
 from schemes.ccadb import get_all_mozilla_certs
+
+
 # This optimistically assumes that all CA certificates can be omitted.
 # TODO: More accurately, assume that only chains ending in the intersection of the root stores can be omitted.
 class IntermediateSuppression:
@@ -38,12 +39,14 @@ class IntermediateSuppression:
         for c in certList:
             cert = x509.load_der_x509_certificate(c)
             try:
-                if cert.extensions.get_extension_for_oid(oid.ExtensionOID.BASIC_CONSTRAINTS).value.ca:
+                if cert.extensions.get_extension_for_oid(
+                    oid.ExtensionOID.BASIC_CONSTRAINTS
+                ).value.ca:
                     if c not in self.knownCerts:
                         # Can't use ICA flag with this chain if there's a CA cert not in Mozilla Root Store
                         return b"".join(certList)
                     else:
-                        # This cert will be suppressed
+                        # This cert will be suppressed
                         continue
             except ExtensionNotFound:
                 pass
@@ -54,7 +57,10 @@ class IntermediateSuppression:
     def decompress(self, compressed_data):
         return compressed_data
 
+
 import schemes.zstd_base
+
+
 class TLSCertCompression:
     def __init__(self):
         self.inner = schemes.zstd_base.zstdPython()

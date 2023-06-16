@@ -41,36 +41,49 @@ Dfvp7OOGAN6dEOM4+qR9sdjoSYKEBpsr6GtPAQw4dy753ec5
 -----END CERTIFICATE-----
 """
 
+
 def extract_der_column(path, column):
-        with open(path) as input:
-            table = csv.reader(input)
-            next(table)
-            extract = lambda x : x509.load_pem_x509_certificate(x[column].encode(), default_backend()).public_bytes(serialization.Encoding.DER)
-            return [extract(x) for x in table]
+    with open(path) as input:
+        table = csv.reader(input)
+        next(table)
+        extract = lambda x: x509.load_pem_x509_certificate(
+            x[column].encode(), default_backend()
+        ).public_bytes(serialization.Encoding.DER)
+        return [extract(x) for x in table]
+
 
 @lru_cache
 def get_all_mozilla_certs():
-        roots = extract_der_column('data/AllMozillaRoots.csv',-1)
-        roots.append(x509.load_pem_x509_certificate(LECrossSigned.encode(), default_backend()).public_bytes(serialization.Encoding.DER))
-        intermediates = extract_der_column('data/AllMozillaIntermediates.csv',-1)
-        pending = [] # TODO Pending
+    roots = extract_der_column("data/AllMozillaRoots.csv", -1)
+    roots.append(
+        x509.load_pem_x509_certificate(
+            LECrossSigned.encode(), default_backend()
+        ).public_bytes(serialization.Encoding.DER)
+    )
+    intermediates = extract_der_column("data/AllMozillaIntermediates.csv", -1)
+    pending = []  # TODO Pending
 
-        return roots + intermediates + pending
+    return roots + intermediates + pending
+
 
 @lru_cache
 def get_all_microsoft_certs():
-        roots = extract_der_column('data/AllMicrosoftRoots.csv',-1) # TODO Remove non-TLS roots.
-        # TODO Intermediates
-        return roots
+    roots = extract_der_column(
+        "data/AllMicrosoftRoots.csv", -1
+    )  # TODO Remove non-TLS roots.
+    # TODO Intermediates
+    return roots
+
 
 @lru_cache
 def ccadb_certs():
-        certs = get_all_microsoft_certs() + get_all_mozilla_certs()
-        logging.info(f"Loaded {len(certs)} certs from the CCADB lists.")
-        return certs
+    certs = get_all_microsoft_certs() + get_all_mozilla_certs()
+    logging.info(f"Loaded {len(certs)} certs from the CCADB lists.")
+    return certs
 
-if __name__ == '__main__':
-       certs = ccadb_certs()
-       for c in certs:
-              p = x509.load_der_x509_certificate(c)
-              print(f"{p.subject} {p.issuer} sha256={p.fingerprint(hashes.SHA256())}")
+
+if __name__ == "__main__":
+    certs = ccadb_certs()
+    for c in certs:
+        p = x509.load_der_x509_certificate(c)
+        print(f"{p.subject} {p.issuer} sha256={p.fingerprint(hashes.SHA256())}")

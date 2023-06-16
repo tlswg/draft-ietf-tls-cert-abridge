@@ -12,7 +12,9 @@ import logging
 import schemes.util
 import random
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 compressors = []
 compressors.append(schemes.simple.NullCompressor())
@@ -24,7 +26,7 @@ compressors.append(schemes.simple.ICAAndTLS())
 compressors.append(schemes.baseline.Baseline())
 
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=1000,redact=True)) # Little benefit over 3k
-compressors.append(schemes.optimised.PrefixAndTrained(dictSize=3000,redact=True))
+compressors.append(schemes.optimised.PrefixAndTrained(dictSize=3000, redact=True))
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=10000,redact=True)) # Little benefit over 3k
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=100000,redact=True)) # Little benefit over 10k
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=True)) # Little benefit over 10k
@@ -37,42 +39,48 @@ compressors.append(schemes.optimised.PrefixAndTrained(dictSize=3000,redact=True)
 # compressors.append(schemes.optimised.PrefixAndTrained(dictSize=200000,redact=False))
 
 compressors.append(schemes.optimised.PrefixAndSystematic(threshold=2000))
-#compressors.append(schemes.optimised.PrefixAndSystematic(threshold=1000)) # These are all beaten by the higher thresholds
+# compressors.append(schemes.optimised.PrefixAndSystematic(threshold=1000)) # These are all beaten by the higher thresholds
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=100))
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=10))
 # compressors.append(schemes.optimised.PrefixAndSystematic(threshold=1))
 
 data = schemes.util.load_certificates()
-data = random.sample(data,10000)
+data = random.sample(data, 10000)
 logging.info(f"Selected sample of {len(data)} certificate chains for benchmark")
-results = dict();
+results = dict()
 for s in compressors:
     results[s] = list()
 
-for entry in tqdm(data,desc="Benchmarking Compression Schemes"):
+for entry in tqdm(data, desc="Benchmarking Compression Schemes"):
     entry = [base64.b64decode(x) for x in entry]
     for scheme in compressors:
         size = len(scheme.compress(entry))
         results[scheme].append(size)
 
-stats = [(f"p{y}", lambda x, y=y: numpy.percentile(x, y)) for y in [5,50,95]]
+stats = [(f"p{y}", lambda x, y=y: numpy.percentile(x, y)) for y in [5, 50, 95]]
 
-with open('output.csv', 'w', newline='') as file:
+with open("output.csv", "w", newline="") as file:
     writer = csv.writer(file)
-    writer.writerow(['Scheme', 'Storage Footprint'] + [name for name, _ in stats])  # Write header row
+    writer.writerow(
+        ["Scheme", "Storage Footprint"] + [name for name, _ in stats]
+    )  # Write header row
 
-    for scheme, sizes in tqdm(results.items(),desc='Computing Confidence Intervals'):
+    for scheme, sizes in tqdm(results.items(), desc="Computing Confidence Intervals"):
         row = [scheme.name(), scheme.footprint()]
         for statName, stat in stats:
-            lower,upper = scipy.stats.bootstrap([sizes], stat, method='percentile').confidence_interval
+            lower, upper = scipy.stats.bootstrap(
+                [sizes], stat, method="percentile"
+            ).confidence_interval
             if upper - lower > 100:
-                logging.warning(f"Large Confidence Interval for {scheme.name()} {statName} of [{lower:.1f},{upper:.1f}] bytes")
+                logging.warning(
+                    f"Large Confidence Interval for {scheme.name()} {statName} of [{lower:.1f},{upper:.1f}] bytes"
+                )
             row.append(upper)
         writer.writerow(row)
 
 print()
-with open('output.csv', 'r') as file:
+with open("output.csv", "r") as file:
     csv_reader = csv.reader(file)
     table_data = list(csv_reader)
-table = tabulate(table_data, headers="firstrow", tablefmt="github",floatfmt=".0f")
+table = tabulate(table_data, headers="firstrow", tablefmt="github", floatfmt=".0f")
 print(table)
