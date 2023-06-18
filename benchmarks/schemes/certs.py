@@ -69,7 +69,7 @@ def load_cert_chains():
 
 @lru_cache
 def load_ee_certs_from_chains(redact):
-    #TODO: Assumes the first cert is an end-entity cert.
+    # TODO: Assumes the first cert is an end-entity cert.
     end_entity_der = [base64.b64decode(x[0]) for x in load_cert_chains()]
     if redact:
         end_entity_der = [
@@ -78,16 +78,20 @@ def load_ee_certs_from_chains(redact):
         ]
     return end_entity_der
 
+
 @lru_cache
 def load_ca_certs_from_chains():
     ca_certs = set()
-    for chain in tqdm(load_cert_chains(),desc="Extracting CA Certificates from Chains"):
+    for chain in tqdm(
+        load_cert_chains(), desc="Extracting CA Certificates from Chains"
+    ):
         for cert in chain:
             cert_bytes = base64.b64decode(cert)
             if is_ca_cert(parse_der_to_cert(cert_bytes)):
                 ca_certs.add(cert_bytes)
     logging.info(f"Extracted {len(ca_certs)} CA Certs from certificate chains")
     return list(ca_certs)
+
 
 def extract_der_column(path, column, keep=lambda x: True):
     with open(path) as output_file:
@@ -229,13 +233,18 @@ def cert_redactor(der_encoding):
 def extract_subject_info(der_bytes):
     parsed_cert = parse_der_to_cert(der_bytes)
     signature = parsed_cert.signature
-    public_key = parsed_cert.public_key().public_bytes(serialization.Encoding.DER,serialization.PublicFormat.SubjectPublicKeyInfo)
-    domains = parsed_cert.extensions.get_extension_for_oid(oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME).value.public_bytes()
-    return (domains,public_key,signature)
+    public_key = parsed_cert.public_key().public_bytes(
+        serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    domains = parsed_cert.extensions.get_extension_for_oid(
+        oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+    ).value.public_bytes()
+    return (domains, public_key, signature)
+
 
 def extract_sct_signatures(der_bytes):
     parsed_cert = parse_der_to_cert(der_bytes)
     sct_list = parsed_cert.extensions.get_extension_for_class(
-            x509.PrecertificateSignedCertificateTimestamps
-        ).value
+        x509.PrecertificateSignedCertificateTimestamps
+    ).value
     return [x.signature for x in sct_list]

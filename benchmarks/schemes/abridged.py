@@ -1,5 +1,9 @@
 from schemes.internal import ZstdWrapper, DictCompress, zstandard_train_dict
-from schemes.certs import load_ee_certs_from_chains, CommonCertStrings, get_all_ccadb_certs
+from schemes.certs import (
+    load_ee_certs_from_chains,
+    CommonCertStrings,
+    get_all_ccadb_certs,
+)
 import zstandard
 
 # TODO: These footprints don't reflect any additional storage caused by

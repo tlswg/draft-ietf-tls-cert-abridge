@@ -27,7 +27,6 @@ def load_schemes():
         schemes.existing.IntermediateSuppression(),
         schemes.existing.ICAAndTLS(),
         schemes.existing.HypotheticalOptimimum(),
-
         # This Draft
         schemes.abridged.PrefixOnly(),
         schemes.abridged.Baseline(),
@@ -98,7 +97,7 @@ def main():
     )
     results = benchmark(targets, chains)
     stats = [(f"p{y}", lambda x, y=y: numpy.percentile(x, y)) for y in [5, 50, 95]]
-    for (scheme,result) in results.items():
+    for scheme, result in results.items():
         results[scheme] = numpy.array(result)
     write_stats(results, "output.csv", stats)
     print()
@@ -106,5 +105,5 @@ def main():
 
 
 if __name__ == "__main__":
-    #TODO Basic CLI Interface
+    # TODO Basic CLI Interface
     main()
