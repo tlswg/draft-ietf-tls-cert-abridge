@@ -1,6 +1,6 @@
 from schemes.internal import ZstdWrapper
-from schemes.certs import is_ca_cert, parse_der_to_cert, get_all_ccadb_certs
-
+from schemes.certs import is_ca_cert, parse_der_to_cert, get_all_ccadb_certs, extract_subject_info, extract_sct_signatures
+import zstandard
 
 class NullCompressor:
     def __init__(self):
@@ -84,3 +84,26 @@ class ICAAndTLS:
 
     def decompress(self, compressed_data):
         return self.ica.decompress(self.tls.decompress(compressed_data))
+
+class HypotheticalOptimimum:
+
+    def __init__(self):
+        pass
+
+    def name(self):
+        return "Hypothetical Optimal Compression"
+
+    def footprint(self):
+        return 0
+
+    def compress(self, cert_chain):
+        #TODO
+        # Signature, Public Key and  zib compressed alternative names.
+        (d,pk,s) = extract_subject_info(cert_chain[0])
+        compressed_domains = zstandard.compress(d,22)
+        # SCTs
+        return compressed_domains + pk + s + b"".join(extract_sct_signatures(cert_chain[0]))
+
+    def decompress(self, compressed_data):
+        # Not defined.
+        pass

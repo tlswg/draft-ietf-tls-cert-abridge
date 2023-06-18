@@ -224,3 +224,18 @@ def cert_redactor(der_encoding):
     )
 
     return new_cert.public_bytes(serialization.Encoding.DER)
+
+
+def extract_subject_info(der_bytes):
+    parsed_cert = parse_der_to_cert(der_bytes)
+    signature = parsed_cert.signature
+    public_key = parsed_cert.public_key().public_bytes(serialization.Encoding.DER,serialization.PublicFormat.SubjectPublicKeyInfo)
+    domains = parsed_cert.extensions.get_extension_for_oid(oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME).value.public_bytes()
+    return (domains,public_key,signature)
+
+def extract_sct_signatures(der_bytes):
+    parsed_cert = parse_der_to_cert(der_bytes)
+    sct_list = parsed_cert.extensions.get_extension_for_class(
+            x509.PrecertificateSignedCertificateTimestamps
+        ).value
+    return [x.signature for x in sct_list]

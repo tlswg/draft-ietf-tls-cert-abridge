@@ -26,6 +26,8 @@ def load_schemes():
         schemes.existing.TLSCertCompression(),
         schemes.existing.IntermediateSuppression(),
         schemes.existing.ICAAndTLS(),
+        schemes.existing.HypotheticalOptimimum(),
+
         # This Draft
         schemes.abridged.PrefixOnly(),
         schemes.abridged.Baseline(),
@@ -104,4 +106,5 @@ def main():
 
 
 if __name__ == "__main__":
+    #TODO Basic CLI Interface
     main()
