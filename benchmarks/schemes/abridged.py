@@ -3,6 +3,8 @@ from schemes.certs import (
     load_ee_certs_from_chains,
     CommonCertStrings,
     get_all_ccadb_certs,
+    extract_cert_common_strings,
+    extract_scts,
 )
 import zstandard
 
@@ -95,3 +97,40 @@ class PrefixAndCommon:
         cert_strings = CommonCertStrings(threshold)
         cert_strings.ingest_all(load_ee_certs_from_chains(redact=False))
         return zstandard.ZstdCompressionDict(cert_strings.top())
+
+
+class PrefixAndSystemic:
+    def __init__(self):
+        self.inner1 = DictCompress(get_all_ccadb_certs())
+        common_dict = self.build_dict()
+        self.dict_size = len(common_dict)
+        self.inner2 = ZstdWrapper(shared_dict=common_dict)
+
+    def name(self):
+        return f"Method 2: CA Prefix and SystematicStrings"
+
+    def footprint(self):
+        return self.dict_size
+
+    def compress(self, cert_chain):
+        return self.inner2.compress_bytes(self.inner1.compress(cert_chain))
+
+    def decompress(self, compressed_data):
+        return self.inner1.decompress(self.inner2.decompress(compressed_data))
+
+    def build_dict(self):
+        string_dict = dict()
+        string_dict[b"sct_log_ids"] = set()
+        string_dict[b"issuer_names"] = set()
+        for x in load_ee_certs_from_chains(redact=False):
+            common_strings = extract_cert_common_strings(x)
+            issuer_name = common_strings[0]
+            remainder = common_strings[1:]
+            if issuer_name not in string_dict:
+                string_dict[issuer_name] = set()
+            string_dict.get(issuer_name).update(remainder)
+            string_dict.get(b"sct_log_ids").update([x.log_id for x in extract_scts(x)])
+            string_dict[b"issuer_names"].add(issuer_name)
+        return zstandard.ZstdCompressionDict(
+            b"".join([b"".join(v) for v in string_dict.values()])
+        )

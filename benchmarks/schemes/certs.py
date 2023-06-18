@@ -42,6 +42,7 @@ def report_missing_ca_cert(parsed_cert):
         MISSING_CA_CERTS.add(fingerprint)
 
 
+@lru_cache
 def parse_der_to_cert(der_bytes):
     return x509.load_der_x509_certificate(der_bytes)
 
@@ -144,42 +145,7 @@ class CommonCertStrings:
             self.ingest(der_bytes)
 
     def ingest(self, der_bytes):
-        cert = parse_der_to_cert(der_bytes)
-        self.counter.update([cert.issuer.public_bytes(serialization.Encoding.DER)])
-        try:
-            self.counter.update(
-                [
-                    cert.extensions.get_extension_for_oid(
-                        oid.OCSPExtensionOID
-                    ).public_bytes(serialization.Encoding.DER)
-                ]
-            )
-        except ExtensionNotFound:
-            pass
-        extensions = [
-            x509.BasicConstraints,
-            x509.AuthorityKeyIdentifier,
-            x509.AuthorityInformationAccess,
-            x509.KeyUsage,
-            x509.ExtendedKeyUsage,
-            x509.NameConstraints,
-            x509.FreshestCRL,
-            x509.CRLDistributionPoints,
-            x509.PolicyConstraints,
-            x509.CertificatePolicies,
-        ]
-        for x in extensions:
-            try:
-                self.counter.update(
-                    [cert.extensions.get_extension_for_class(x).value.public_bytes()]
-                )
-            except ExtensionNotFound:
-                continue
-        sct_list = cert.extensions.get_extension_for_class(
-            x509.PrecertificateSignedCertificateTimestamps
-        ).value
-        for sct in sct_list:
-            self.counter.update([sct.log_id])
+        self.counter.update(extract_cert_common_strings(der_bytes))
 
     def top(self):
         out = b""
@@ -242,9 +208,45 @@ def extract_subject_info(der_bytes):
     return (domains, public_key, signature)
 
 
-def extract_sct_signatures(der_bytes):
+@lru_cache
+def extract_scts(der_bytes):
     parsed_cert = parse_der_to_cert(der_bytes)
     sct_list = parsed_cert.extensions.get_extension_for_class(
         x509.PrecertificateSignedCertificateTimestamps
     ).value
-    return [x.signature for x in sct_list]
+    return sct_list
+
+
+def extract_cert_common_strings(der_bytes):
+    cert = parse_der_to_cert(der_bytes)
+    common_strings = list()
+    # TODO: Not keyed, so keep this first for now.
+    common_strings += [cert.issuer.public_bytes(serialization.Encoding.DER)]
+    try:
+        common_strings += [
+            cert.extensions.get_extension_for_oid(oid.OCSPExtensionOID).public_bytes(
+                serialization.Encoding.DER
+            )
+        ]
+    except ExtensionNotFound:
+        pass
+    extensions = [
+        x509.BasicConstraints,
+        x509.AuthorityKeyIdentifier,
+        x509.AuthorityInformationAccess,
+        x509.KeyUsage,
+        x509.ExtendedKeyUsage,
+        x509.NameConstraints,
+        x509.FreshestCRL,
+        x509.CRLDistributionPoints,
+        x509.PolicyConstraints,
+        x509.CertificatePolicies,
+    ]
+    for x in extensions:
+        try:
+            common_strings += [
+                cert.extensions.get_extension_for_class(x).value.public_bytes()
+            ]
+        except ExtensionNotFound:
+            continue
+    return common_strings

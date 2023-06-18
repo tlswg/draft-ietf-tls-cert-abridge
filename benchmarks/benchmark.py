@@ -27,6 +27,7 @@ def load_schemes():
         schemes.existing.IntermediateSuppression(),
         schemes.existing.ICAAndTLS(),
         schemes.existing.HypotheticalOptimimum(),
+        schemes.abridged.PrefixAndSystemic(),
         # This Draft
         schemes.abridged.PrefixOnly(),
         schemes.abridged.Baseline(),

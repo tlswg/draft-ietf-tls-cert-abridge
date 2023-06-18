@@ -4,7 +4,7 @@ from schemes.certs import (
     parse_der_to_cert,
     get_all_ccadb_certs,
     extract_subject_info,
-    extract_sct_signatures,
+    extract_scts,
 )
 import zstandard
 
@@ -113,7 +113,7 @@ class HypotheticalOptimimum:
             compressed_domains
             + pk
             + s
-            + b"".join(extract_sct_signatures(cert_chain[0]))
+            + b"".join([x.signature for x in extract_scts(cert_chain[0])])
         )
 
     def decompress(self, compressed_data):
