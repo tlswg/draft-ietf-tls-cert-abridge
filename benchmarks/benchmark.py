@@ -27,7 +27,6 @@ def load_schemes():
         schemes.existing.IntermediateSuppression(),
         schemes.existing.ICAAndTLS(),
         schemes.existing.HypotheticalOptimimum(),
-        schemes.abridged.PrefixAndSystemic(),
         # This Draft
         schemes.abridged.PrefixOnly(),
         schemes.abridged.Baseline(),
@@ -40,6 +39,7 @@ def load_schemes():
     # Optimal when compared against thresholds of 1,10,100 and 1000
     compressors += [schemes.abridged.PrefixAndCommon(threshold=2000)]
 
+    compressors += [schemes.abridged.PrefixAndSystemic()]
     return compressors
 
 
