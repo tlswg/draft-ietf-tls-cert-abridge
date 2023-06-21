@@ -27,7 +27,7 @@ author:
     email: ietf@dennis-jackson.uk
 
 normative:
- RFC8879:
+ TLSCertCompress: RFC8879
 
 informative:
  RFC9000:
@@ -71,7 +71,7 @@ informative:
 
 --- abstract
 
-This drafts defines a WebPKI specific scheme for use in TLS Certificate Compression {{RFC8879}}. The compression scheme relies on a static dictionary consisting of a snapshot of the root and intermediate certificates used in the WebPKI. The result is a dramatic improvement over the existing generic compression schemes used in TLS, equitable for both CAs and website operators and avoids the need for trust negotiation or additional error handling. As the scheme removes the overhead of including root and intermediate certificates in the TLS handshake, it paves the way for a transition to TLS certificates using post-quantum signatures and has an outsized impact on QUIC's handshake latency due to the magnification limits on the size of the server's response. This compression scheme may also be of interest in other situations where certificate chains are stored, for example in the operation of Certificate Transparency logs.
+This drafts defines a WebPKI specific scheme for use in TLS Certificate Compression {{TLSCertCompress}}. The compression scheme relies on a static dictionary consisting of a snapshot of the root and intermediate certificates used in the WebPKI. The result is a dramatic improvement over the existing generic compression schemes used in TLS, equitable for both CAs and website operators and avoids the need for trust negotiation or additional error handling. As the scheme removes the overhead of including root and intermediate certificates in the TLS handshake, it paves the way for a transition to TLS certificates using post-quantum signatures and has an outsized impact on QUIC's handshake latency due to the magnification limits on the size of the server's response. This compression scheme may also be of interest in other situations where certificate chains are stored, for example in the operation of Certificate Transparency logs.
 
 --- middle
 
@@ -81,7 +81,7 @@ This drafts defines a WebPKI specific scheme for use in TLS Certificate Compress
 
 When a server responds to a TLS Client Hello, its initial flight of packets is limited in size by the underlying transport protocol. If the initial flight of packets exceeds the size limit, the server must wait for the client to acknowledge receipt, incurring the latency penalty of an additional round trip before the handshake can complete. In TLS, the majority of the server’s initial flight consists of the certificate chain and consequently reducing the size of this chain to below the initial size limit can deliver substantial performance improvements.
 
-For TLS handshakes over TCP, the maximum size of the server’s initial flight is typically around 15,000 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes ({{RFC9000}}, Section 8.1). Applying one of the generic TLS Certificate Compression schemes defined in {{RFC8879}} is already essential for QUIC deployments, as roughly 35% of uncompressed certificate chains in use on the WebPKI are larger than the QUIC size limit {{FastlyStudy}}, {{QUICStudy}}.
+For TLS handshakes over TCP, the maximum size of the server’s initial flight is typically around 15,000 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes ({{RFC9000}}, Section 8.1). Applying one of the generic TLS Certificate Compression schemes defined in {{TLSCertCompress}} is already essential for QUIC deployments, as roughly 35% of uncompressed certificate chains in use on the WebPKI are larger than the QUIC size limit {{FastlyStudy}}, {{QUICStudy}}.
 
 However, this approach is insufficient for the upcoming transition to post-quantum primitives. The current NIST PQ signatures are between 10 and 40 times the size of current elliptic curve signatures and consequently pose a substantial challenge for TLS handshakes over both TCP and QUIC {{PQStudy}}. As the increased size is due to incompressible cryptoprimitives like signatures and public keys, existing TLS Certificate Compression schemes will yield negligible improvements over the uncompressed certificates.
 
@@ -97,17 +97,17 @@ It is also important to note that as this is only a compression scheme, it does 
 
 ## Relationship to other drafts
 
-This draft defines a certificate compression mechanism suitable for use with [RFC 8879: TLS Certificate Compression](https://www.rfc-editor.org/rfc/rfc8879.html).
+This draft defines a certificate compression mechanism suitable for use with TLS Certificate Compression {{TLSCertCompress}}.
 
-The intent of this draft is to provide a compelling alternative to [draft-kampanakis-tls-scas](https://www.ietf.org/id/draft-kampanakis-tls-scas-latest-03.html) as it provides a better compression ratio, doesn't require any additional retries or error handling if connections fail and doesn't require clients to be frequently updated with new intermediate certificates.
+The intent of this draft is to provide a compelling alternative to Intemerdiate Certificate Compression {{SCA}} as it provides a better compression ratio, doesn't require any additional retries or error handling if connections fail and doesn't require clients to be frequently updated with new intermediate certificates.
 
-[CBOR Encoded X.509 (C509)](https://www.ietf.org/archive/id/draft-ietf-cose-cbor-encoded-cert-05.html) defines a concise alternative format for X.509 certificates. If this format were to become widely used on the WebPKI, defining an alternative version of this draft specifically for C509 certificates would be sensible.
+CBOR Encoded X.509 (C509) {{?I-D.ietf-cose-cbor-encoded-cert-05}} defines a concise alternative format for X.509 certificates. If this format were to become widely used on the WebPKI, defining an alternative version of this draft specifically for C509 certificates would be sensible.
 
-[Compact TLS, (cTLS)](https://www.ietf.org/archive/id/draft-ietf-tls-ctls-08.html) defines a version of TLS1.3 which allows a pre-configured client and server to establish a session with minimal overhead on the wire. In particular, it supports the use of a predefined list of certificates known to both parties which can be compressed. However, cTLS is still at an early stage and may be challenging to deploy in a WebPKI context due to the need for clients and servers to agree on the profile template to be used in the handshake.
+Compact TLS, (cTLS) {{?I-D.ietf-tls-ctls-08}} defines a version of TLS1.3 which allows a pre-configured client and server to establish a session with minimal overhead on the wire. In particular, it supports the use of a predefined list of certificates known to both parties which can be compressed. However, cTLS is still at an early stage and may be challenging to deploy in a WebPKI context due to the need for clients and servers to agree on the profile template to be used in the handshake.
 
-[RFC 7924: TLS Cached Information Extension]( https://www.rfc-editor.org/info/rfc7924) introduced a new extension allowing clients to signal they had cached certificate information from a previous connection and for servers to signal that the clients should use that cache instead of transmitting a redundant set of certificates. However this RFC has seen little adoption in the wild as it introduces a new fingerprinting vector and arguably supplanted by session resumption.
+TLS Cached Information Extension {{?RFC7924}} introduced a new extension allowing clients to signal they had cached certificate information from a previous connection and for servers to signal that the clients should use that cache instead of transmitting a redundant set of certificates. However this RFC has seen little adoption in the wild as it introduces a new fingerprinting vector and arguably supplanted by session resumption.
 
-[RFC 9191: Handling long certificate chains in TLS-Based EAP Methods](https://www.rfc-editor.org/rfc/rfc9191.txt) discusses the challenges of long certificate chains outside the WebPKI ecosystem. Although the scheme proposed in this draft is targeted at WebPKI use, it nonetheless delivers a substantial improvement over existing TLS compression schemes even when alternative roots are used. Further, defining alternative shared dictionaries for other major ecosystems may be attractive.
+Handling long certificate chains in TLS-Based EAP Methods {{?RFC9191}} discusses the challenges of long certificate chains outside the WebPKI ecosystem. Although the scheme proposed in this draft is targeted at WebPKI use, it nonetheless delivers a substantial improvement over existing TLS compression schemes even when alternative roots are used. Further, defining alternative shared dictionaries for other major ecosystems may be attractive.
 
 ## Status
 
