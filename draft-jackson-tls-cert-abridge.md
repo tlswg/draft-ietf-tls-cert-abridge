@@ -4,7 +4,7 @@ abbrev: "Abridged Certs"
 category: exp
 
 docname: draft-jackson-tls-cert-abridge-latest
-submissiontype: IETF  # also: "independent", "IAB", or "IRTF"
+submissiontype: IETF
 number:
 date:
 consensus: true
@@ -28,9 +28,11 @@ author:
 
 normative:
  TLSCertCompress: RFC8879
+ ZSTD: RFC8478
 
 informative:
  RFC9000:
+ SCA: I-D.kampanakis-tls-scas-latest
 
  FastlyStudy:
    title: Does the QUIC handshake require compression to be fast?
@@ -40,14 +42,10 @@ informative:
     -
       ins: "P. McManus"
       name: "Patrick McManus"
+      org: "Fastly"
 
- QUICStudy:
-   title: On the Interplay between TLS Certificates and QUIC Performance
-   target: https://ilab-pub.imp.fu-berlin.de/papers/nthms-ibtcq-22.pdf
-   date: 2022-12-06
-   author:
-    -
-      ins: "TODO TODO TODO"
+ QUICStudy: DOI.10.1145/3555050.3569123
+ SCAStudy: DOI.10.1007/978-3-031-07689-3_25
 
  PQStudy:
    title: Sizing Up Post-Quantum Signatures
@@ -55,7 +53,9 @@ informative:
    date: 2021-11-08
    author:
     -
-      ins: "Bas TODO"
+      name: Bas Westerbaan
+      ins: B. Westerbaan
+      org: "Cloudflare"
 
  CCADB:
    title: Common CA Database
@@ -68,10 +68,14 @@ informative:
       org: "Microsoft"
     -
       org: "Google"
+    -
+      org: "Apple"
+    -
+      org: "Cisco"
 
 --- abstract
 
-This drafts defines a WebPKI specific scheme for use in TLS Certificate Compression {{TLSCertCompress}}. The compression scheme relies on a static dictionary consisting of a snapshot of the root and intermediate certificates used in the WebPKI. The result is a dramatic improvement over the existing generic compression schemes used in TLS, equitable for both CAs and website operators and avoids the need for trust negotiation or additional error handling. As the scheme removes the overhead of including root and intermediate certificates in the TLS handshake, it paves the way for a transition to TLS certificates using post-quantum signatures and has an outsized impact on QUIC's handshake latency due to the magnification limits on the size of the server's response. This compression scheme may also be of interest in other situations where certificate chains are stored, for example in the operation of Certificate Transparency logs.
+This drafts defines a WebPKI specific scheme for use in TLS Certificate Compression {{TLSCertCompress}}. The compression scheme relies on a static dictionary consisting of a snapshot of the root and intermediate certificates used in the WebPKI. The result is a substantial improvement over the existing generic compression schemes used in TLS, equitable for both CAs and website operators and avoids the need for trust negotiation or additional error handling. As the scheme removes the overhead of including root and intermediate certificates in the TLS handshake, it paves the way for a transition to TLS certificates using post-quantum signatures and has an outsized impact on QUIC's handshake latency due to limits on the size of the server's initial message flight. This compression scheme may also be of interest in other situations where certificate chains are stored, for example in the operation of Certificate Transparency logs.
 
 --- middle
 
@@ -79,41 +83,36 @@ This drafts defines a WebPKI specific scheme for use in TLS Certificate Compress
 
 ## Motivation
 
-When a server responds to a TLS Client Hello, its initial flight of packets is limited in size by the underlying transport protocol. If the initial flight of packets exceeds the size limit, the server must wait for the client to acknowledge receipt, incurring the latency penalty of an additional round trip before the handshake can complete. In TLS, the majority of the server’s initial flight consists of the certificate chain and consequently reducing the size of this chain to below the initial size limit can deliver substantial performance improvements.
+When a server responds to a TLS Client Hello, its initial flight of packets is limited in size by the underlying transport protocol. If the initial flight of packets exceeds the size limit, the server must wait for the client to acknowledge receipt, incurring the latency penalty of an additional round trip before the handshake can complete. For TLS handshakes over TCP, the maximum size of the server’s initial flight is typically around 14,500 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes ({{RFC9000}}, Section 8.1).
 
-For TLS handshakes over TCP, the maximum size of the server’s initial flight is typically around 15,000 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes ({{RFC9000}}, Section 8.1). Applying one of the generic TLS Certificate Compression schemes defined in {{TLSCertCompress}} is already essential for QUIC deployments, as roughly 35% of uncompressed certificate chains in use on the WebPKI are larger than the QUIC size limit {{FastlyStudy}}, {{QUICStudy}}.
-
-However, this approach is insufficient for the upcoming transition to post-quantum primitives. The current NIST PQ signatures are between 10 and 40 times the size of current elliptic curve signatures and consequently pose a substantial challenge for TLS handshakes over both TCP and QUIC {{PQStudy}}. As the increased size is due to incompressible cryptoprimitives like signatures and public keys, existing TLS Certificate Compression schemes will yield negligible improvements over the uncompressed certificates.
+The existing compression schemes used in {{TLSCertCompress}} have been shown to deliver a substantial improvement in QUIC handshake latency {{FastlyStudy}}, {{QUICStudy}} by reducing the size of server's certificate chain and so fitting the server's initial messages within a single flight. However, in a post-quantum setting, the signatures and public keys used in a TLS certificate chain will be typically 10 to 40 times their current size and cannot be compressed with existing TLS Certificate Compression schemes.
+Consequently studies {{SCAStudy}} {{PQStudy}} have shown that post-quantum certificate transmission becomes the dominant source of latency in PQ TLS with certificate chains alone expected to exceed even the TCP initial flight limit. This motivates alternative designs for reducing the on-wire size of post-quantum certificate chains.
 
 ## Overview
 
-This draft introduces a new TLS Certificate Compression scheme which is intended specifically for use on the WebPKI. It makes used of a shared dictionary between client and server consisting of all intermediate and root certificates contained in the root stores of major browsers sourced from the Common CA Database {{CCADB}}. As of May 2023, this dictionary would be 2.6 MB in size and consist of roughly 1500 intermediate certificates and 150 root certificates. The disk footprint can be reduced to effectively zero as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every WebPKI intermediate and root certificate as part of their application.
+This draft introduces a new TLS Certificate Compression scheme which is intended specifically for use on the WebPKI. It makes used of a shared dictionary between client and server consisting of all intermediate and root certificates contained in the root stores of major browsers sourced from the Common CA Database {{CCADB}}. As of May 2023, this dictionary would be 2.6 MB in size and consist of roughly 1500 intermediate certificates and 150 root certificates. The disk footprint can be reduced to effectively zero as many clients (such as Mozilla Firefox & Google Chrome) are already provisioned with their trusted intermediate and root certificates for compatibility and performance reasons.
 
-Using a shared dictionary allows for this compression scheme to deliver dramatically more effective compression, reducing an entire certificate chain to roughly 25% of its original size, rather than the 75% achieved by existing generic schemes. Firstly, the intermediate and root certificates are compressed to a couple of bytes each and effectively no longer contribute to the wire size of the certificate chain. Secondly, the end-entity certificate can be further reduced by reference to strings in the shared dictionary. The preliminary evaluation of this scheme suggests that 50% of certificate chains in use today fit in under 950 bytes and 95% fit in under 1613 bytes.
+Using a shared dictionary allows for this compression scheme to deliver dramatically more effective compression, reducing an entire certificate chain to roughly 25% of its original size, rather than the 75% achieved by existing generic schemes. Firstly, the intermediate and root certificates are compressed to a couple of bytes each and effectively no longer contribute to the wire size of the certificate chain. Secondly, the end-entity certificate can be further reduced by reference to strings in the shared dictionary. A preliminary evaluation of this scheme suggests that 50% of certificate chains in use today fit in under 1000 bytes and 95% fit in under 1500 bytes. This is substantially smaller than  can be achieved with the use of existing TLS certificate compression schemes and the suppression of CA certificates as proposed in {{SCA}}. This is because whilst {{SCA}} removes the intermediate and root certs from the chain entirely, this also removes the redundancy that generic TLS certificate compression schemes exploit.
 
-Perhaps surprisingly, this scheme results in a smaller wire size than the use of generic TLS certificate compression and the suppression of CA certificates as proposed in {{?SCA=I-D.kampanakis-tls-scas-latest}}. This is because although the proposal removes the intermediate and root certs entirely, this also removes the redundancy that generic TLS certificate compression schemes rely on.
-
-It is also important to note that as this is only a compression scheme, it does not impact any trust decisions in the TLS handshake or perform trust negotiation. A client can offer this compression scheme whilst only trusting a subset of the certificates in the CCADB snapshot, similarly a server can offer this compression scheme whilst using a certificate chain which does not chain back to a WebPKI root. Similarly, a new root or intermediate can be included in CCADB and static dictionary at the point of application to the root stores, rather than having to wait to be approved, allowing them to benefit from this compression scheme from the very first day of trust. As a result this scheme is equitable in so far as it provides equal benefits for all CAs in the WebPKI, doesn't privilege any particular end-entity certificate or website and allows WebPKI clients to make different trust decisions without fear of breakage.
+It is also important to note that as this is only a compression scheme, it does not impact any trust decisions in the TLS handshake or perform trust negotiation. A client can offer this compression scheme whilst only trusting a subset of the certificates in the CCADB snapshot, similarly a server can offer this compression scheme whilst using a certificate chain which does not chain back to a WebPKI root. Similarly, a new root or intermediate can be included in CCADB and static dictionary at the start of their application to the root store and if their application is approved will benefit from this compression scheme from the very first day of trust. As a result this scheme is equitable in so far as it provides equal benefits for all CAs in the WebPKI, doesn't privilege any particular end-entity certificate or website and allows WebPKI clients to make individual trust decisions without fear of breakage.
 
 ## Relationship to other drafts
 
 This draft defines a certificate compression mechanism suitable for use with TLS Certificate Compression {{TLSCertCompress}}.
 
-The intent of this draft is to provide a compelling alternative to Intemerdiate Certificate Compression {{SCA}} as it provides a better compression ratio, doesn't require any additional retries or error handling if connections fail and doesn't require clients to be frequently updated with new intermediate certificates.
+The intent of this draft is to provide an alternative to CA Certificate Suppression {{SCA}} as it provides a better compression ratio, can operate in a wider range of scenarios (including out of sync clients or servers) and doesn't require any additional error handling or retry mechanisms.
 
-CBOR Encoded X.509 (C509) {{?I-D.ietf-cose-cbor-encoded-cert-05}} defines a concise alternative format for X.509 certificates. If this format were to become widely used on the WebPKI, defining an alternative version of this draft specifically for C509 certificates would be sensible.
+CBOR Encoded X.509 (C509) {{?I-D.ietf-cose-cbor-encoded-cert-05}} defines a concise alternative format for X.509 certificates. If this format were to become widely used on the WebPKI, defining an alternative version of this draft specifically for C509 certificates would be beneficial.
 
-Compact TLS, (cTLS) {{?I-D.ietf-tls-ctls-08}} defines a version of TLS1.3 which allows a pre-configured client and server to establish a session with minimal overhead on the wire. In particular, it supports the use of a predefined list of certificates known to both parties which can be compressed. However, cTLS is still at an early stage and may be challenging to deploy in a WebPKI context due to the need for clients and servers to agree on the profile template to be used in the handshake.
+Compact TLS, (cTLS) {{?I-D.ietf-tls-ctls-08}} defines a version of TLS1.3 which allows a pre-configured client and server to establish a session with minimal overhead on the wire. In particular, it supports the use of a predefined list of certificates known to both parties which can be compressed. However, cTLS is still at an early stage and may be challenging to deploy in a WebPKI context due to the need for clients and servers to have prior-knowledge of handshake profile in use.
 
-TLS Cached Information Extension {{?RFC7924}} introduced a new extension allowing clients to signal they had cached certificate information from a previous connection and for servers to signal that the clients should use that cache instead of transmitting a redundant set of certificates. However this RFC has seen little adoption in the wild as it introduces a new fingerprinting vector and arguably supplanted by session resumption.
+TLS Cached Information Extension {{?RFC7924}} introduced a new extension allowing clients to signal they had cached certificate information from a previous connection and for servers to signal that the clients should use that cache instead of transmitting a redundant set of certificates. However this RFC has seen little adoption in the wild due to concerns over client privacy.
 
-Handling long certificate chains in TLS-Based EAP Methods {{?RFC9191}} discusses the challenges of long certificate chains outside the WebPKI ecosystem. Although the scheme proposed in this draft is targeted at WebPKI use, it nonetheless delivers a substantial improvement over existing TLS compression schemes even when alternative roots are used. Further, defining alternative shared dictionaries for other major ecosystems may be attractive.
+Handling long certificate chains in TLS-Based EAP Methods {{?RFC9191}} discusses the challenges of long certificate chains outside the WebPKI ecosystem. Although the scheme proposed in this draft is targeted at WebPKI use, defining alternative shared dictionaries for other major ecosystems may be of interest.
 
 ## Status
 
-This draft is very much a work in progress. Open questions are marked with the tag **DISCUSS**.
-
-**TODO** : Rename to Snappy Certs?
+This draft is still at an early stage. Open questions are marked with the tag **DISCUSS**.
 
 # Conventions and Definitions
 
@@ -125,7 +124,7 @@ This section defines two alternative schemes. The first scheme is presented for 
 
 **DISCUSS** The intent is that the final version of this draft only describe a single scheme, after further discussion of the various tradeoffs.
 
-**DISCUSS** Both of the methods in this draft rely on zstd with a shared dictionary, however they are agnostic as to the algorithm as long as it supports the use of an application-specified dictionary. Is there an argument for using a difference scheme?
+**DISCUSS** Both of the methods in this draft rely on Zstandard {{ZSTD}} with a shared dictionary, however they are agnostic as to the algorithm as long as it supports the use of an application-specified dictionary. Is there an alternative scheme worth consideration?
 
 ## Defining the Certificate Listing
 
@@ -146,6 +145,8 @@ As the inclusion process for new root certificates typically takes multiple year
 **Commentary:** Using a cutoff date of 13th June 2023, this listing consists of X root certificates, Y intermediate certificates and occupies Z bytes in total. A copy of this listing can be found here (TODO). TODO Typical Lifespan. TODO Number added.
 
 **DISCUSS:** Will static versioning be sufficient? If it is felt that new dictionaries might want to be introduced more frequently than yearly, this draft would be better recast as its own TLS extension. A sketch of what that might look like is defined in Appendix TODO.
+
+**TODO: Condense this to two prefix schemes, one with a fair dictionary and one with a trained dictionary.**
 
 ## Scheme 1: Simple Baseline
 
