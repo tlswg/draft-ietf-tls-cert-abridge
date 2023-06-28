@@ -5,6 +5,7 @@ from schemes.certs import (
     get_all_ccadb_certs,
     extract_cert_common_strings,
     extract_scts,
+    get_cert_issuer,
 )
 import zstandard
 
@@ -124,13 +125,14 @@ class PrefixAndSystemic:
         string_dict[b"issuer_names"] = set()
         for x in load_ee_certs_from_chains(redact=False):
             common_strings = extract_cert_common_strings(x)
-            issuer_name = common_strings[0]
-            remainder = common_strings[1:]
+            issuer_name = get_cert_issuer(x)
             if issuer_name not in string_dict:
                 string_dict[issuer_name] = set()
-            string_dict.get(issuer_name).update(remainder)
+            string_dict.get(issuer_name).update(common_strings)
             string_dict.get(b"sct_log_ids").update([x.log_id for x in extract_scts(x)])
             string_dict[b"issuer_names"].add(issuer_name)
-        return zstandard.ZstdCompressionDict(
-            b"".join([b"".join(v) for v in string_dict.values()])
-        )
+
+        uniques = set()
+        for v in string_dict.values():
+            uniques.update(v)
+        return zstandard.ZstdCompressionDict(b"".join(uniques))

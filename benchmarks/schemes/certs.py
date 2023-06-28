@@ -217,36 +217,66 @@ def extract_scts(der_bytes):
     return sct_list
 
 
+def get_cert_issuer(der_bytes):
+    cert = parse_der_to_cert(der_bytes)
+    return cert.issuer.public_bytes(serialization.Encoding.DER)
+
+
 def extract_cert_common_strings(der_bytes):
     cert = parse_der_to_cert(der_bytes)
-    common_strings = list()
+    common_strings = Counter()
     # TODO: Not keyed, so keep this first for now.
-    common_strings += [cert.issuer.public_bytes(serialization.Encoding.DER)]
-    try:
-        common_strings += [
-            cert.extensions.get_extension_for_oid(oid.OCSPExtensionOID).public_bytes(
-                serialization.Encoding.DER
-            )
-        ]
-    except ExtensionNotFound:
-        pass
+    common_strings.update([cert.issuer.public_bytes(serialization.Encoding.DER)])
+    # try:
+    #     common_strings.update([
+    #         cert.extensions.get_extension_for_oid(oid.OCSPExtensionOID).public_bytes(
+    #             serialization.Encoding.DER
+    #         )])
+    # except ExtensionNotFound:
+    #     pass
     extensions = [
-        x509.BasicConstraints,
+        # x509.BasicConstraints,
         x509.AuthorityKeyIdentifier,
-        x509.AuthorityInformationAccess,
-        x509.KeyUsage,
-        x509.ExtendedKeyUsage,
-        x509.NameConstraints,
+        # x509.KeyUsage,
+        # x509.ExtendedKeyUsage,
+        # x509.NameConstraints,
         x509.FreshestCRL,
-        x509.CRLDistributionPoints,
-        x509.PolicyConstraints,
+        # x509.PolicyConstraints,
         x509.CertificatePolicies,
     ]
+    try:
+        domain = (
+            cert.extensions.get_extension_for_class(x509.CRLDistributionPoints)
+            .value.public_bytes()
+            .split(".".encode())[0:2]
+        )
+        common_strings.update([b"".join(domain)])
+    except ExtensionNotFound:
+        pass
+    try:
+        domain = (
+            cert.extensions.get_extension_for_class(x509.AuthorityInformationAccess)
+            .value.public_bytes()
+            .split(".".encode())[0:2]
+        )
+        common_strings.update([b"".join(domain)])
+    except ExtensionNotFound:
+        pass
     for x in extensions:
         try:
-            common_strings += [
-                cert.extensions.get_extension_for_class(x).value.public_bytes()
-            ]
+            common_strings.update(
+                [cert.extensions.get_extension_for_class(x).value.public_bytes()]
+            )
         except ExtensionNotFound:
             continue
     return common_strings
+
+
+if __name__ == "__main__":
+    all = Counter()
+    ee = load_ee_certs_from_chains(False)
+    for x in tqdm(ee):
+        all += extract_cert_common_strings(x)
+    outcome = b"".join([k for k in all.keys() if all[k] > 0])
+    print(outcome)
+    print(len(outcome))
