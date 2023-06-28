@@ -156,19 +156,22 @@ This draft is still at an early stage. Open questions are marked with the tag **
 
 This section describes a compression scheme suitable for compressing certificate chains used in TLS. The scheme is defined in two parts. An initial pass compressing known intermediate and root certificates and then a subsequent pass compressing the end-entity certificates. This scheme is used by performing the compression step of Pass 1 and then the compression step of Pass 2. Decompression is performed in the reverse order.
 
+**TODO:** Abridged is a placeholder name until someone comes up with a better one.
+
 ## Pass 1: Intermediate and Root Compression
 
 This pass relies on a shared listing of intermediate and root certificates known to both client and server. As many clients (e.g. Mozilla Firefox and Google Chrome) already ship with a list of trusted intermediate and root certificates, this pass allows for the members of the existing list to be included, rather than requiring them to have to be stored separately. This section first details how the client and server enumerate the known certificates, then describes how the listing is used to compress the certificate chain.
 
-### Enumeration of Known Intermediate and Root Certificates
+### Enumeration of Known Intermediate and Root Certificates {#listing}
 
 The Common CA Database {{CCADB}} is operated by Mozilla on behalf of a number of Root Program operators including Mozilla, Microsoft, Google, Apple and Cisco. The CCADB contains a listing of all the root certificates trusted by the various root programs, as well as their associated intermediate certificates and new certificates from applicants to one or more root programs who are not yet trusted.
 
 At the time of writing, the CCADB contains around 150 root program certificates and 1500 intermediate certificates which are trusted for TLS Server Authentication, occupying 2.6 MB of disk space. As this listing changes rarely and new inclusions typically join the CCADB listing year or more before they can be deployed on the web, the listing used in this draft will be those certificates included in the CCADB on the 1st of January 2023. Further versions of this draft may provide for a listing on a new cutoff date or according to a different criteria for inclusion.
 
-**DISCUSS:** Is minting a new draft every year or two acceptable? If not, this draft could be redesigned as its own extension and negotiate the available dictionaries which could then change dynamically. A sketch of that approach is discussed in Appendix B below.
+**DISCUSS:** Is minting a new draft every year or two acceptable? If not, this draft could be redesigned as its own extension and negotiate the available dictionaries which could then change dynamically. A sketch of that approach is discussed in {{churn}} below.
 
 The algorithm for enumerating the list of compressible intermediate and root certificates is given below:
+
 1. Query the CCADB for all known root and intermediate certificates {{CCADBAllCerts}}
 2. Remove all certificates which have the extendedKeyUsage extension without the TLS Server Authentication bit or anyExtendedKeyUsage bit set.
 3. Remove all certificates whose notAfter date is on or before the cutoff date.
@@ -183,8 +186,10 @@ The algorithm for enumerating the list of compressible intermediate and root cer
 ### Compression of CA Certificates in Certificate Chain
 
 Compression Algorithm:
+
 * Input: The byte representation of a `Certificate` message as defined in {{TLS13}} whose contents are `X509` certificates.
 * Output: `opaque` bytes suitable for transmission in a `CompressedCertificate` message defined in {{TLSCertCompress}}.
+
 
 1. Parse the message and extract a list of `CertificateEntry`s, iterate over the list.
 2. Check if `cert_data` is byte-wise identical to any of the known intermediate or root certificates from the listing in the previous section.
@@ -198,30 +203,30 @@ The decompression algorithm is simply repeating the above steps but swapping any
 
 ## Pass 2: End-Entity Compression
 
-This section describes a pass based on Zstandard {{ZSTD}} with application-specified dictionaries. The dictionary is constructed with reference to the list of intermediate and root certificates discussed earlier in Section XX.
+This section describes a pass based on Zstandard {{ZSTD}} with application-specified dictionaries. The dictionary is constructed with reference to the list of intermediate and root certificates discussed earlier in {{listing}}.
 
 **DISCUSS:** This draft is largely agnostic as to which underlying compression scheme is used as long as it supports dictionaries. Is there an argument for use of an alternative scheme?
 
 ### Format of Shared Dictionary
 
-The dictionary is built by systematic combination of the common strings used in certificates by each issuer in the known list described in Section XX.
+The dictionary is built by systematic combination of the common strings used in certificates by each issuer in the known list described in {{listing}}.
 
 **TODO:** This section remains a work in progress. The goal is to produce a dictionary of competitive size and similar storage footprint to a trained Zstandard dictionary targeting end-entity TLS certificates. The procedure below is not yet final and needs improvements.
 
 This dictionary is constructed in three stages, with the output of each stage being concatenated with the next.
 
-Firstly, for each intermediate certificate enumerated in the listing in section XX., extract the issuer field (4.1.2.4 of {{!RFC5280}}) and derive the matching authority key identifier (4.2.1.1. of {{RFC5280}}) for the certificate. Order them according to the listing in section XX.
+Firstly, for each intermediate certificate enumerated in the listing in {{listing}}., extract the issuer field (4.1.2.4 of {{!RFC5280}}) and derive the matching authority key identifier (4.2.1.1. of {{RFC5280}}) for the certificate. Order them according to the listing in {{listing}}.
 
-Secondly, take the listing of certificate transparency logs trusted by major browsers {{AppleCTLogs}} {{GoogleCTLogs}} and extract the list of log identifiers. ORder them lexicographically.
+Secondly, take the listing of certificate transparency logs trusted by major browsers {{AppleCTLogs}} {{GoogleCTLogs}} and extract the list of log identifiers. Order them lexicographically.
 
-Finally, enumerate all certificates contained within certificate transparency logs above and issued between 01.12.22 and 01.12.23. For each issuer in the listing in section XX, select the end-entity certificate with the lowest serial number. Extract the following extensions from the end-entity certificate:
+Finally, enumerate all certificates contained within certificate transparency logs above and issued between 01.12.22 and 01.12.23. For each issuer in the listing in {{listing}}, select the end-entity certificate with the lowest serial number. Extract the following extensions from the end-entity certificate:
   * FreshestCRL,
   * CertificatePolicies
   * CRLDistributionPoints
   * AuthorityInformationAccess
 If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
 
-**DISCUSS:** This dictionary occupies ~ 65 KB of space. A comparison of this approach with a conventional trained dictionary is in Section XX.
+**DISCUSS:** This dictionary occupies ~ 65 KB of space. A comparison of this approach with a conventional trained dictionary is in {{eval}}.
 
 #### Compression of End-Entity Certificates in Certificate Chain
 
@@ -238,7 +243,7 @@ These parameters are recommended in order to achieve the best compression ratio 
 
 **TODO:** These parameters are a work in progress.
 
-# Preliminary Evaluation
+# Preliminary Evaluation {#eval}
 
 **DISCUSS:** This section to be removed prior to publication.
 
@@ -270,9 +275,9 @@ Note that as this draft specifies a compression scheme, it does not impact the n
 
 **TODO**
 
-# Appendix: CCADB Churn and Dictionary Negotiation
+# CCADB Churn and Dictionary Negotiation {#churn}
 
-## Churn
+## CCADB Churn
 
 Typically around 10 or so new root certificates are introduced to the WebPKI each year. The various root programs restrict the lifetimes of these certificates, Microsoft to between 8 and 25 years [3.A.3](https://learn.microsoft.com/en-us/security/trusted-root/program-requirements), Mozilla to between 0 and 14 years [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles). Chrome has proposed a maximum lifetime of 7 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)). Some major CAs have objected to this proposed policy as the root inclusion process currently takes around 3 years from start to finish [Digicert Blog](https://www.digicert.com/blog/googles-moving-forward-together-proposals-for-root-ca-policy). Similarly, Mozilla requires CAs to apply to renew their roots with at least 2 years notice [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles).
 
