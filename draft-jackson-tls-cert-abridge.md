@@ -31,6 +31,21 @@ normative:
  ZSTD: RFC8478
  TLS13: RFC8446
 
+ AppleCTLogs:
+   title: Certificate Transparency Logs trusted by Apple
+   target: https://valid.apple.com/ct/log_list/current_log_list.json
+   date: 2023-06-05
+   author:
+    -
+      org: "Apple"
+
+ GoogleCTLogs:
+   title: Certificate Transparency Logs trusted by Google
+   target: https://source.chromium.org/chromium/chromium/src/+/main:components/certificate_transparency/data/log_list.json
+   date: 2023-06-05
+   author:
+    -
+      org: "Google"
 
  CCADBAllCerts:
    title: CCADB Certificates Listing
@@ -183,116 +198,88 @@ The decompression algorithm is simply repeating the above steps but swapping any
 
 ## Pass 2: End-Entity Compression
 
-This section describes two compression schemes based on Zstandard {{ZSTTD}} with application-specified dictionaries. The first scheme offers the best compression rate and is easy to implement but relies on unstandardized dictionary training steps which are unlikely to produce an output equitable for all CAs. The second scheme is not as efficient but is both equitable and easy to standardize.
+This section describes a pass based on Zstandard {{ZSTD}} with application-specified dictionaries. The dictionary is constructed with reference to the list of intermediate and root certificates discussed earlier in Section XX.
 
-**DISCUSS** This draft is largely agnostic as to which underlying compression scheme is used as long as it supports dictionaries. Is there an argument for use of an alternative scheme? E.g. Brotli.
+**DISCUSS:** This draft is largely agnostic as to which underlying compression scheme is used as long as it supports dictionaries. Is there an argument for use of an alternative scheme?
 
-**DISCUSS** It is intended that the first scheme be suitable for early experimentation and implementation for empirical validation. In parallel, the second scheme can likely be improved to match the performance of the first scheme whilst retaining equity and without resort to black box techniques.
+### Format of Shared Dictionary
 
-## Scheme 1: Simple Baseline
+The dictionary is built by systematic combination of the common strings used in certificates by each issuer in the known list described in Section XX.
 
-Advantages:
+**TODO:** This section remains a work in progress. The goal is to produce a dictionary of competitive size and similar storage footprint to a trained Zstandard dictionary targeting end-entity TLS certificates. The procedure below is not yet final and needs improvements.
 
-* The dictionary is easy to format and ship as raw bytes .
-* The implementation is near identical to the existing zstd TLS Certificate Compression, with the addition of the dictionary parameter.
+This dictionary is constructed in three stages, with the output of each stage being concatenated with the next.
 
-Drawbacks:
+Firstly, for each intermediate certificate enumerated in the listing in section XX., extract the issuer field (4.1.2.4 of {{!RFC5280}}) and derive the matching authority key identifier (4.2.1.1. of {{RFC5280}}) for the certificate. Order them according to the listing in section XX.
 
-* WebPKI clients that already have a copy of their trusted roots and intermediates must pay the storage cost of a second copy of these certificates.
+Secondly, take the listing of certificate transparency logs trusted by major browsers {{AppleCTLogs}} {{GoogleCTLogs}} and extract the list of log identifiers. ORder them lexicographically.
 
-#### Format of Shared Dictionary
+Finally, enumerate all certificates contained within certificate transparency logs above and issued between 01.12.22 and 01.12.23. For each issuer in the listing in section XX, select the end-entity certificate with the lowest serial number. Extract the following extensions from the end-entity certificate:
+  * FreshestCRL,
+  * CertificatePolicies
+  * CRLDistributionPoints
+  * AuthorityInformationAccess
+If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
 
-Take the certificate listing defined in Section XX. Convert each certificate to DER and concatenate the bytes. The result will be passed directly to zstd as a raw dictionary.
+**DISCUSS:** This dictionary occupies ~ 65 KB of space. A comparison of this approach with a conventional trained dictionary is in Section XX.
 
-#### Server Usage
+#### Compression of End-Entity Certificates in Certificate Chain
 
-When the client and server negotiate this TLS Compression Scheme as described in TODO, identified as `0xTODO`, the server MUST compress its certificate chain with zstd as described in TODO with the raw bytes  dictionary (See Section YY of zstd) defined in Section XX.
+The resulting bytes from Pass 1 are passed to ZStandard {{ZSTD}} with the dictionary specified in the previous section. It is RECOMMENDED that the compressor (i.e. the server) use the following parameters:
+ * `chain_log=30`
+ * `search_log=30`
+ * `hash_log=30`
+ * `target_length=6000`
+ * `threads=1`
+ * `compression_level=22`
+ * `force_max_window=1`
 
-The server SHOULD use a high compression level as this is a one-time operation that can be reused for subsequent connections and has little impact on decompression speed. The server SHOULD perform this operation at startup and cache the result for future connections for performance. The server MAY rely on an external application to perform this compression (e.g. a script which provisions a file) and simply transmit the resulting bytes.
+These parameters are recommended in order to achieve the best compression ratio however implementations MAY use their preferred parameters as these parameters are not used during decompression. With TLS Certificate Compression, the server needs to only perform a single compression at startup and cache the result, so optimizing for maximal compression is recommended. The client's decompression speed is insensitive to these parameters.
 
-#### Client Usage
+**TODO:** These parameters are a work in progress.
 
-If the client offers this TLS Compression Scheme as described in TODO, identified as `0xTODO` and the server transmits a CompressedCertificate Message with this identifier, the client MUST decompress the contents using the zstd algorithm defined in XX and with the raw bytes dictionary described in Section XX of zstd and Section XX of this draft. The client MUST follow the requirements of TLS Cert Compression with respect to size.
+# Preliminary Evaluation
 
-## Scheme 2: Footprint Optimisation
+**DISCUSS:** This section to be removed prior to publication.
 
-Advantages:
+This draft is a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available. The storage footprint refers to the on-disk size required for the end-entity dictionary. The other columns report the 5th, 50th and 95th percentile of the resulting certificate chains.
 
-* Clients which already ship a subset of the certificate listing for other purposes can reuse this data rather than having to ship a duplicate.
+The evaluation set was a ~75,000 certificate chains from the Tranco list. The opaque trained dictionary
+was given redacted certificate chains with the end-entity subject name and alternative names removed.
 
-Disadvantages:
+| Scheme                                               |   Storage Footprint |   p5 |   p50 |   p95 |
+|------------------------------------------------------|---------------------|------|-------|-------|
+| Original                                             |                   0 | 2308 |  4032 |  5609 |
+| TLS Cert Compression                                 |                   0 | 1619 |  3243 |  3821 |
+| Intermediate Suppression and TLS Cert Compression    |                   0 | 1020 |  1445 |  3303 |
+| **This Draft**                                       |               65336 |  661 |  1060 |  1437 |
+| **This Draft with opaque trained dictionary**        |                3000 |  562 |   931 |  1454 |
+| Hypothetical Optimal Compression                     |                   0 |  377 |   742 |  1075 |
 
-* Greater implementation complexity.
-
-#### Format of the Shared Dictionary
-
-Take the certificate listing defined in Section XX. Assign a two-byte identifier according to a lexicographic ordering, starting from 0x0000 and proceeding consecutively. Let the id of a cert be written `id(cert)`.
-
-TODO: Take 100,000 certificates sampled from certificate transparency logs and submitted between XX and YY dates according to the following algorithm. Extract the end entity certificates and redact any domain entries. Train a zstd dictionary on the result.
-
-TODO: Define a systematic way of building a smaller zstd dictionary based on certificate profiles, subject key identifiers, etc. Alternatively could ask CAs to profile a compression profile?
-
-#### Compression
-
-* Do keyword substitution on certificate chain, replacing certificate chain with 3 byte identifier where possible.
-* Do keyed zstd dictionary on the remaining file.
-
-**Decompression**
-
-* Do keyed zstd dictionary on the message.
-* Do keyword substitution.
-
-## Preliminary Evaluation
-
-This draft is very much a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available.
-
-
-| Compression Method                                     | Median Size (Bytes) | Relative Size |
-| ------------------------------------------------------ | ------------------- | ------------- |
-| Original, without any form of compression              | 4022                | 100%          |
-| Using TLS Certificate Compression with zstd            | 3335                | 83%           |
-| Transmitting only the End-Entity TLS Certificate       | 1664                | 41%           |
-| TLS Cert Compression & Only End-Entity TLS Certificate | 1469                | 37%           |
-| **This Draft, Scheme 1 - Baseline**                    | 1351                | 34%           |
-| **This Draft, Scheme 2- Footprint**                    | 949                 | 24%           |
-
-Performance is also greatly enhanced at the tails. For the optimized implementation:
-
-| Percentile | Original | Scheme 2, This Draft | Relative Size |
-| ---------- | -------- | -------------------- | ------------- |
-| 5th        | 2755     | 641                  | 23%           |
-| 50th       | 4022     | 949                  | 24%           |
-| 95th       | 5801     | 1613                 | 28%           |
-
-## Security Considerations
+# Security Considerations
 
 Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it
 
-## IANA Considerations
+# IANA Considerations
 
-This document has no IANA actions.
-
+**TODO:** Adopt an identifier for experimental purposes.
 
 --- back
 
-## Acknowledgments
+# Acknowledgments
 
-TODO acknowledge.
+**TODO**
 
-## Appendix: Background on the CCADB and Churn
+# Appendix: CCADB Churn and Dictionary Negotiation
 
-### Size
-
-As of May 2023 this listing from the CCADB currently occupies 2.6 MB of disk space. The on-disk footprint can be further reduced as many WebPKI clients (e.g. Mozilla Firefox, Google Chrome) already ship a copy of every intermediate and root cert they trust for use in certificate validation.
-
-### Churn
+## Churn
 
 Typically around 10 or so new root certificates are introduced to the WebPKI each year. The various root programs restrict the lifetimes of these certificates, Microsoft to between 8 and 25 years [3.A.3](https://learn.microsoft.com/en-us/security/trusted-root/program-requirements), Mozilla to between 0 and 14 years [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles). Chrome has proposed a maximum lifetime of 7 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)). Some major CAs have objected to this proposed policy as the root inclusion process currently takes around 3 years from start to finish [Digicert Blog](https://www.digicert.com/blog/googles-moving-forward-together-proposals-for-root-ca-policy). Similarly, Mozilla requires CAs to apply to renew their roots with at least 2 years notice [Wiki page](https://wiki.mozilla.org/CA/Root_CA_Lifecycles).
 
 Typically around 100 to 200 new WebPKI intermediate certificates are issued each year. No WebPKI root program currently limits the lifetime of intermediate certificates, but they are in practice capped by the lifetime of their parent root certificate. The vast majority of these certificates are issued with 10 year lifespans. A small but notable fraction (<10%) are issued with 2 or 3 year lifetimes. Chrome's Root Program has proposed that Intermediate Certificates be limited to 3 years in the future ([Update](https://www.chromium.org/Home/chromium-security/root-ca-policy/moving-forward-together/)).
 
 Disclosure required as of July 2022 ([Mozilla Root Program Section 5.3.2](https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/policy/#53-intermediate-certificates)) - within a week of creation and prior to usage.
-Chrome require three weeks notice before a new intermediate is issued to a new organisation. [Policy](https://www.chromium.org/Home/chromium-security/root-ca-policy/)
+Chrome require three weeks notice before a new intermediate is issued to a new organization. [Policy](https://www.chromium.org/Home/chromium-security/root-ca-policy/)
 
 
 * [CCADB Cert Listings](https://www.ccadb.org/resources)
@@ -302,15 +289,19 @@ Chrome require three weeks notice before a new intermediate is issued to a new o
 * [Mozilla In Progress Root Inclusions](https://ccadb.my.salesforce-sites.com/mozilla/UpcomingRootInclusionsReport)
 * [Mozilla Roots in Firefox](https://ccadb.my.salesforce-sites.com/mozilla/CACertificatesInFirefoxReport)
 
-As root and intermediate Certificates typically have multi-year lifetime, the churn in the CCADB is relatively low and a new version of this compression scheme could be minted at yearly intervals, with the only change being the CCADB list used. Further, as this scheme separates trust negotiation from compression, its possible for proposed root and intermediate certificates to be included in the compression scheme ahead of any public trust decisions, allowing them to benefit from compression from the very first day of use.
 
-## Appendix: Independent Extension?
+## Dictionary Negotiation
 
-* A scheme is an u16 id, a u16 major version and a u16 minor version.
-  * Adding to a dictionary is a minor version bump.
-  * Removing from a dictionary is a major version bump.
-  * Expected: minor bump every month, major bump every year.
-* CH: Convey a list of schemes.
-* SH:
-  * Select a version from the CH list.
-  * Selected version must match on scheme id and major version and be equal to or less than the minor version.
+This draft is currently written with a view to being adopted as a particular TLS Certificate Compression Scheme. However,
+this means that each dictionary used in the wild must have an assigned codepoint. A new dictionary would likely need to be
+issued no more than yearly. However, negotiating the dictionary used would avoid that overhead.
+
+**DISCUSS:** A sketch for how dictionary negotiation might work is below.
+
+A dictionary is identified by two bytes, with a further two bytes for the major version and two more for the minor version.
+Whenever a new version of a dictionary is issued with only additions of new certificates, it requires a minor version bump.
+Whenever a new version of a dictionary is issued with any removals, it requires a major version bump.
+The client lists their known dictionaries in an extension in the ClientHello. The client need only advertise the highest known
+minor version for any major version of a dictionary they are willing to offer. The server may select any dictionary it has a copy of with matching identifier and major version number and minor version number not greater than the client's minor version number.
+
+The expectation would be that new minor versions would be issued monthly or quarterly, with new major versions only every year or multiple years. This reflects the relative rates of when certificates are added or removed to the CCADB listing.
