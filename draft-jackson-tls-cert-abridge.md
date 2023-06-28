@@ -29,6 +29,24 @@ author:
 normative:
  TLSCertCompress: RFC8879
  ZSTD: RFC8478
+ TLS13: RFC8446
+
+
+ CCADBAllCerts:
+   title: CCADB Certificates Listing
+   target: https://ccadb.my.salesforce-sites.com/ccadb/AllCertificateRecordsCSVFormat
+   date: 2023-06-05
+   author:
+    -
+      org: "Mozilla"
+    -
+      org: "Microsoft"
+    -
+      org: "Google"
+    -
+      org: "Apple"
+    -
+      org: "Cisco"
 
 informative:
  RFC9000:
@@ -72,6 +90,7 @@ informative:
       org: "Apple"
     -
       org: "Cisco"
+
 
 --- abstract
 
@@ -120,33 +139,55 @@ This draft is still at an early stage. Open questions are marked with the tag **
 
 # Abridged Compression Scheme
 
-This section defines two alternative schemes. The first scheme is presented for its simplicity and ease of implementation. The intent is that this scheme is used as a baseline for whether more complex schemes justify any improved properties. The second scheme is moderately more complex but allows client implementations to reuse existing stores of root and intermediate certificates without having to ship a second copy formatted for use in the dictionary.
+This section describes a compression scheme suitable for compressing certificate chains used in TLS. The scheme is defined in two parts. An initial pass compressing known intermediate and root certificates and then a subsequent pass compressing the end-entity certificates. This scheme is used by performing the compression step of Pass 1 and then the compression step of Pass 2. Decompression is performed in the reverse order.
 
-**DISCUSS** The intent is that the final version of this draft only describe a single scheme, after further discussion of the various tradeoffs.
+## Pass 1: Intermediate and Root Compression
 
-**DISCUSS** Both of the methods in this draft rely on Zstandard {{ZSTD}} with a shared dictionary, however they are agnostic as to the algorithm as long as it supports the use of an application-specified dictionary. Is there an alternative scheme worth consideration?
+This pass relies on a shared listing of intermediate and root certificates known to both client and server. As many clients (e.g. Mozilla Firefox and Google Chrome) already ship with a list of trusted intermediate and root certificates, this pass allows for the members of the existing list to be included, rather than requiring them to have to be stored separately. This section first details how the client and server enumerate the known certificates, then describes how the listing is used to compress the certificate chain.
 
-## Defining the Certificate Listing
+### Enumeration of Known Intermediate and Root Certificates
 
-Both schemes rely on a shared dictionary between client and server. The primary source of this shared dictionary is a listing of root and intermediate certificates contained in the Common Certificate Database (CCADB). The CCADB is operated by Mozilla, with TODO as members. Further detail on the CCADB is described in Appendix TODO.
+The Common CA Database {{CCADB}} is operated by Mozilla on behalf of a number of Root Program operators including Mozilla, Microsoft, Google, Apple and Cisco. The CCADB contains a listing of all the root certificates trusted by the various root programs, as well as their associated intermediate certificates and new certificates from applicants to one or more root programs who are not yet trusted.
 
-This draft defines following procedure for enumerating the certificates in the dictionary on a particular cutoff date:
+At the time of writing, the CCADB contains around 150 root program certificates and 1500 intermediate certificates which are trusted for TLS Server Authentication, occupying 2.6 MB of disk space. As this listing changes rarely and new inclusions typically join the CCADB listing year or more before they can be deployed on the web, the listing used in this draft will be those certificates included in the CCADB on the 1st of January 2023. Further versions of this draft may provide for a listing on a new cutoff date or according to a different criteria for inclusion.
 
-1. Lexicographically order all root and intermediate certificates contained in the CCADB as of the cutof date.
-2. Remove all certificates which do not have the TODO extendedKeyUsage extension with Y bit set.
+**DISCUSS:** Is minting a new draft every year or two acceptable? If not, this draft could be redesigned as its own extension and negotiate the available dictionaries which could then change dynamically. A sketch of that approach is discussed in Appendix B below.
+
+The algorithm for enumerating the list of compressible intermediate and root certificates is given below:
+1. Query the CCADB for all known root and intermediate certificates {{CCADBAllCerts}}
+2. Remove all certificates which have the extendedKeyUsage extension without the TLS Server Authentication bit or anyExtendedKeyUsage bit set.
 3. Remove all certificates whose notAfter date is on or before the cutoff date.
-4. Remove all roots which are not marked as trusted or in the process of applying to be trusted by at least one of the following Root Programs: TODO.
-5. Remove all intermediates whose parent root certificates are no longer in the listing.
+4. Remove all roots which are not marked as trusted or in the process of applying to be trusted by at least one of the following Root Programs: Mozilla, Google, Microsoft, Apple.
+5. Remove all intermediate certificates whose parent root certificates are no longer in the listing.
+6. Remove any certificates which are duplicates (have the same representation as as sequence of DER bytes)
+7. Order the list by the notBefore date of each certificate, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.
+8. Associate each element of the list with the concatenation of the constant `0x99` and its index in the list represented as a `uint16`.
 
-This listing is relatively stable and changes relatively slowly. Consequently it is expected that this listing can be versioned statically and a new TLS Certificate Compression codepoint assigned for each version, for example at a yearly cadence with a cutoff date of January 1st. Using a static listing simplifies deployment and avoids the need for any kind of negotiation as to support.
+**DISCUSS**: In the future, CCADB may expose such a listing directly. The list of included root programs might also benefit from being widened. A subset of these lists is available in `benchmarks/data` in the draft Github repository.
 
-As the inclusion process for new root certificates typically takes multiple years, this listing ensures that they are included ahead of time and so can be benefit from compression from the very first day of use. As both root and intermediate certificates typically have a lifespan of 10 years or more, even certificates which are issued unusually quickly will benefit from compression for the vast majority of their lifespan. Further, as this draft does not impact trust negotiation, there is no need to reflect removals from root stores in this scheme.
+### Compression of CA Certificates in Certificate Chain
 
-**Commentary:** Using a cutoff date of 13th June 2023, this listing consists of X root certificates, Y intermediate certificates and occupies Z bytes in total. A copy of this listing can be found here (TODO). TODO Typical Lifespan. TODO Number added.
+Compression Algorithm:
+* Input: The byte representation of a `Certificate` message as defined in {{TLS13}} whose contents are `X509` certificates.
+* Output: `opaque` bytes suitable for transmission in a `CompressedCertificate` message defined in {{TLSCertCompress}}.
 
-**DISCUSS:** Will static versioning be sufficient? If it is felt that new dictionaries might want to be introduced more frequently than yearly, this draft would be better recast as its own TLS extension. A sketch of what that might look like is defined in Appendix TODO.
+1. Parse the message and extract a list of `CertificateEntry`s, iterate over the list.
+2. Check if `cert_data` is byte-wise identical to any of the known intermediate or root certificates from the listing in the previous section.
+   1.  If so, replace the opaque `cert_data` member of `CertificateEntry` with its adjusted three byte identifier and copy the `CertificateEntry structure with corrected lengths to the output.
+   2. Otherwise, copy the `CertificateEntry` to the output.
+3. Prepend the correct length information for the `Certificate` message.
 
-**TODO: Condense this to two prefix schemes, one with a fair dictionary and one with a trained dictionary.**
+The resulting output should be a well-formatted `Certificate` message payload with the known intermediate and root certificates replaced with three byte identifiers.
+
+The decompression algorithm is simply repeating the above steps but swapping any recognized three-byte identifier in a `cert_data` field with the DER representation of the associated certificate.
+
+## Pass 2: End-Entity Compression
+
+This section describes two compression schemes based on Zstandard {{ZSTTD}} with application-specified dictionaries. The first scheme offers the best compression rate and is easy to implement but relies on unstandardized dictionary training steps which are unlikely to produce an output equitable for all CAs. The second scheme is not as efficient but is both equitable and easy to standardize.
+
+**DISCUSS** This draft is largely agnostic as to which underlying compression scheme is used as long as it supports dictionaries. Is there an argument for use of an alternative scheme? E.g. Brotli.
+
+**DISCUSS** It is intended that the first scheme be suitable for early experimentation and implementation for empirical validation. In parallel, the second scheme can likely be improved to match the performance of the first scheme whilst retaining equity and without resort to black box techniques.
 
 ## Scheme 1: Simple Baseline
 
