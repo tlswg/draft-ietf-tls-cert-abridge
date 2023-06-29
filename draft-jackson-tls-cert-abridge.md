@@ -306,6 +306,7 @@ issued no more than yearly. However, negotiating the dictionary used would avoid
 A dictionary is identified by two bytes, with a further two bytes for the major version and two more for the minor version.
 Whenever a new version of a dictionary is issued with only additions of new certificates, it requires a minor version bump.
 Whenever a new version of a dictionary is issued with any removals, it requires a major version bump.
+
 The client lists their known dictionaries in an extension in the ClientHello. The client need only advertise the highest known
 minor version for any major version of a dictionary they are willing to offer. The server may select any dictionary it has a copy of with matching identifier and major version number and minor version number not greater than the client's minor version number.
 
