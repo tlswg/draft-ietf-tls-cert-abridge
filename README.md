@@ -21,7 +21,7 @@ This draft is very much a work in progress, however a preliminary evaluation bas
 | **This Draft with opaque trained dictionary**        |                3000 |  562 |   931 |  1454 |
 | Hypothetical Optimal Compression                     |                   0 |  377 |   742 |  1075 |
 
-A more complete set of results and benchmarking scripts can be found in TODO.
+A complete table of results and benchmarking scripts can be found in [benchmarks](benchmarks/).
 
 ## Contributing
 
@@ -30,4 +30,3 @@ See the [guidelines for contributions](https://github.com/dennisjackson/draft-ja
 Contributions can be made by creating pull requests. The GitHub interface supports creating pull requests using the Edit (✏) button.
 
 Formatted text and HTML versions of the draft can be built using `make`. Command line usage requires that you have the necessary software installed.  See [the instructions](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
-
