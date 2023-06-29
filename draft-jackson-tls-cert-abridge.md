@@ -153,7 +153,7 @@ This draft is still at an early stage. Open questions are marked with the tag **
 
 {::boilerplate bcp14-tagged}
 
-This draft refers to dates in Internet Date/Time Format as specified in {{DATES Section 5.6}} without the optional `T` separator.
+This draft refers to dates in Internet Date/Time Format as specified in {{Section 5.6 of DATES}} without the optional `T` separator.
 
 # Abridged Compression Scheme
 
