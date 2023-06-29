@@ -117,7 +117,7 @@ This drafts defines a WebPKI specific scheme for use in TLS Certificate Compress
 
 ## Motivation
 
-When a server responds to a TLS Client Hello, its initial flight of packets is limited in size by the underlying transport protocol. If the initial flight of packets exceeds the size limit, the server must wait for the client to acknowledge receipt, incurring the latency penalty of an additional round trip before the handshake can complete. For TLS handshakes over TCP, the maximum size of the server’s initial flight is typically around 14,500 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes ({{RFC9000}}, Section 8.1).
+When a server responds to a TLS Client Hello, its initial flight of packets is limited in size by the underlying transport protocol. If the initial flight of packets exceeds the size limit, the server must wait for the client to acknowledge receipt, incurring the latency penalty of an additional round trip before the handshake can complete. For TLS handshakes over TCP, the maximum size of the server’s initial flight is typically around 14,500 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes ({{RFC9000, Section 8.1}}).
 
 The existing compression schemes used in {{TLSCertCompress}} have been shown to deliver a substantial improvement in QUIC handshake latency {{FastlyStudy}}, {{QUICStudy}} by reducing the size of server's certificate chain and so fitting the server's initial messages within a single flight. However, in a post-quantum setting, the signatures and public keys used in a TLS certificate chain will be typically 10 to 40 times their current size and cannot be compressed with existing TLS Certificate Compression schemes.
 Consequently studies {{SCAStudy}} {{PQStudy}} have shown that post-quantum certificate transmission becomes the dominant source of latency in PQ TLS with certificate chains alone expected to exceed even the TCP initial flight limit. This motivates alternative designs for reducing the on-wire size of post-quantum certificate chains.
@@ -215,15 +215,17 @@ The dictionary is built by systematic combination of the common strings used in 
 
 This dictionary is constructed in three stages, with the output of each stage being concatenated with the next.
 
-Firstly, for each intermediate certificate enumerated in the listing in {{listing}}., extract the issuer field (4.1.2.4 of {{!RFC5280}}) and derive the matching authority key identifier (4.2.1.1. of {{RFC5280}}) for the certificate. Order them according to the listing in {{listing}}.
+Firstly, for each intermediate certificate enumerated in the listing in {{listing}}., extract the issuer field ({{Section 4.1.2.4 of !RFC5280}}) and derive the matching authority key identifier ({{Section 4.2.1.1 of RFC5280}}) for the certificate. Order them according to the listing in {{listing}}.
 
 Secondly, take the listing of certificate transparency logs trusted by major browsers {{AppleCTLogs}} {{GoogleCTLogs}} and extract the list of log identifiers. Order them lexicographically.
 
 Finally, enumerate all certificates contained within certificate transparency logs above and issued between 01.12.22 and 01.12.23. For each issuer in the listing in {{listing}}, select the end-entity certificate with the lowest serial number. Extract the following extensions from the end-entity certificate:
-  * FreshestCRL,
-  * CertificatePolicies
-  * CRLDistributionPoints
-  * AuthorityInformationAccess
+
+* FreshestCRL
+* CertificatePolicies
+* CRLDistributionPoints
+* AuthorityInformationAccess
+
 If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
 
 **DISCUSS:** This dictionary occupies ~ 65 KB of space. A comparison of this approach with a conventional trained dictionary is in {{eval}}.
@@ -231,6 +233,7 @@ If no end-entity certificate can be found for an issuer with this process, omit 
 #### Compression of End-Entity Certificates in Certificate Chain
 
 The resulting bytes from Pass 1 are passed to ZStandard {{ZSTD}} with the dictionary specified in the previous section. It is RECOMMENDED that the compressor (i.e. the server) use the following parameters:
+
  * `chain_log=30`
  * `search_log=30`
  * `hash_log=30`
@@ -263,7 +266,7 @@ was given redacted certificate chains with the end-entity subject name and alter
 
 # Security Considerations
 
-Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it
+Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer the scheme and benefit from it.
 
 # IANA Considerations
 
