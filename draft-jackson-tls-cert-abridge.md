@@ -193,7 +193,7 @@ Compression Algorithm:
 
 1. Parse the message and extract a list of `CertificateEntry`s, iterate over the list.
 2. Check if `cert_data` is byte-wise identical to any of the known intermediate or root certificates from the listing in the previous section.
-   1.  If so, replace the opaque `cert_data` member of `CertificateEntry` with its adjusted three byte identifier and copy the `CertificateEntry structure with corrected lengths to the output.
+   1.  If so, replace the opaque `cert_data` member of `CertificateEntry` with its adjusted three byte identifier and copy the `CertificateEntry` structure with corrected lengths to the output.
    2. Otherwise, copy the `CertificateEntry` to the output.
 3. Prepend the correct length information for the `Certificate` message.
 
