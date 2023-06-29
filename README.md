@@ -10,7 +10,7 @@ As the scheme removes the overhead of including root and intermediate certificat
 
 ## Preliminary Evaluation
 
-This draft is very much a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available:
+This draft is a work in progress, however a preliminary evaluation is available:
 
 | Scheme                                               |   Storage Footprint |   p5 |   p50 |   p95 |
 |------------------------------------------------------|---------------------|------|-------|-------|
