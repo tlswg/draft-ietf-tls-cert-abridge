@@ -30,6 +30,7 @@ normative:
  TLSCertCompress: RFC8879
  ZSTD: RFC8478
  TLS13: RFC8446
+ DATES: RFC3339
 
  AppleCTLogs:
    title: Certificate Transparency Logs trusted by Apple
@@ -152,11 +153,18 @@ This draft is still at an early stage. Open questions are marked with the tag **
 
 {::boilerplate bcp14-tagged}
 
+This draft refers to dates in Internet Date/Time Format as specified in {{Section 5.6 of DATES}} without the optional `T` separator.
+
 # Abridged Compression Scheme
 
 This section describes a compression scheme suitable for compressing certificate chains used in TLS. The scheme is defined in two parts. An initial pass compressing known intermediate and root certificates and then a subsequent pass compressing the end-entity certificates. This scheme is used by performing the compression step of Pass 1 and then the compression step of Pass 2. Decompression is performed in the reverse order.
 
 **TODO:** Abridged is a placeholder name until someone comes up with a better one.
+
+The compression scheme in this draft has a number of parameters as listed below. Future versions of this draft would use different values for these parameters and use a different TLS Certificate Compression scheme code point.
+
+* `CCADB_SNAPSHOT_TIME` - 2023-01-01 00:00:00Z
+* `CT_CERT_WINDOW` - 2022-12-01 00:00:00Z to 2023-01-01 00:00:00Z
 
 ## Pass 1: Intermediate and Root Compression
 
@@ -166,13 +174,13 @@ This pass relies on a shared listing of intermediate and root certificates known
 
 The Common CA Database {{CCADB}} is operated by Mozilla on behalf of a number of Root Program operators including Mozilla, Microsoft, Google, Apple and Cisco. The CCADB contains a listing of all the root certificates trusted by the various root programs, as well as their associated intermediate certificates and new certificates from applicants to one or more root programs who are not yet trusted.
 
-At the time of writing, the CCADB contains around 150 root program certificates and 1500 intermediate certificates which are trusted for TLS Server Authentication, occupying 2.6 MB of disk space. As this listing changes rarely and new inclusions typically join the CCADB listing year or more before they can be deployed on the web, the listing used in this draft will be those certificates included in the CCADB on the 1st of January 2023. Further versions of this draft may provide for a listing on a new cutoff date or according to a different criteria for inclusion.
+At the time of writing, the CCADB contains around 150 root program certificates and 1500 intermediate certificates which are trusted for TLS Server Authentication, occupying 2.6 MB of disk space. As this listing changes rarely and new inclusions typically join the CCADB listing year or more before they can be deployed on the web, the listing used in this draft will be the relevant certificates included in the CCADB at `CCADB_SNAPSHOT_TIME`. Further versions of this draft may provide for a listing on a new cutoff date or according to a different criteria for inclusion.
 
-**DISCUSS:** Is minting a new draft every year or two acceptable? If not, this draft could be redesigned as its own extension and negotiate the available dictionaries which could then change dynamically. A sketch of that approach is discussed in {{churn}} below.
+**DISCUSS:** Is minting a new draft every year or two acceptable? If not, this draft could be redesigned as its own extension and negotiate the available dictionaries which could then change dynamically. A sketch of that approach is discussed in {{churn}}.
 
 The algorithm for enumerating the list of compressible intermediate and root certificates is given below:
 
-1. Query the CCADB for all known root and intermediate certificates {{CCADBAllCerts}}
+1. Query the CCADB for all known root and intermediate certificates {{CCADBAllCerts}} as of `CCADB_SNAPSHOT_TIME`
 2. Remove all certificates which have the extendedKeyUsage extension without the TLS Server Authentication bit or anyExtendedKeyUsage bit set.
 3. Remove all certificates whose notAfter date is on or before the cutoff date.
 4. Remove all roots which are not marked as trusted or in the process of applying to be trusted by at least one of the following Root Programs: Mozilla, Google, Microsoft, Apple.
@@ -181,7 +189,7 @@ The algorithm for enumerating the list of compressible intermediate and root cer
 7. Order the list by the notBefore date of each certificate, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.
 8. Associate each element of the list with the concatenation of the constant `0x99` and its index in the list represented as a `uint16`.
 
-**DISCUSS**: In the future, CCADB may expose such a listing directly. The list of included root programs might also benefit from being widened. A subset of these lists is available in `benchmarks/data` in the draft Github repository.
+**DISCUSS**: In the future, CCADB may expose such a listing directly. A subset of these lists is available in `benchmarks/data` in the draft Github repository.
 
 ### Compression of CA Certificates in Certificate Chain
 
@@ -219,7 +227,7 @@ Firstly, for each intermediate certificate enumerated in the listing in {{listin
 
 Secondly, take the listing of certificate transparency logs trusted by major browsers {{AppleCTLogs}} {{GoogleCTLogs}} and extract the list of log identifiers. Order them lexicographically.
 
-Finally, enumerate all certificates contained within certificate transparency logs above and issued between 01.12.22 and 01.12.23. For each issuer in the listing in {{listing}}, select the end-entity certificate with the lowest serial number. Extract the following extensions from the end-entity certificate:
+Finally, enumerate all certificates contained within certificate transparency logs above and issued during `CT_CERT_WINDOW`. For each issuer in the listing in {{listing}}, select the end-entity certificate with the lowest serial number. Extract the following extensions from the end-entity certificate:
 
 * FreshestCRL
 * CertificatePolicies
