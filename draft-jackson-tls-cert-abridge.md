@@ -227,12 +227,12 @@ Firstly, for each intermediate certificate enumerated in the listing in {{listin
 
 Secondly, take the listing of certificate transparency logs trusted by major browsers {{AppleCTLogs}} {{GoogleCTLogs}} and extract the list of log identifiers. Order them lexicographically.
 
-Finally, enumerate all certificates contained within certificate transparency logs above and issued during `CT_CERT_WINDOW`. For each issuer in the listing in {{listing}}, select the end-entity certificate with the lowest serial number. Extract the following extensions from the end-entity certificate:
+Finally, enumerate all certificates contained within certificate transparency logs above and issued during `CT_CERT_WINDOW`. For each issuer in the listing in {{listing}}, select the end-entity certificate with the lowest serial number. Extract the contents of the following extensions from the end-entity certificate:
 
-* FreshestCRL
-* CertificatePolicies
-* CRLDistributionPoints
-* AuthorityInformationAccess
+* Authority Information Access ({{Section 4.2.2.1 of RFC5280}})
+* Certificate Policies  ({{Section 4.2.1.4 of RFC5280}})
+* CRL Distribution Points ({{Section 4.2.1.13 of RFC5280}})
+* Freshest CRL ({{Section 4.2.1.15 of RFC5280}})
 
 If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
 
