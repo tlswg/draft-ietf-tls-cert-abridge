@@ -1,6 +1,6 @@
 ---
-title: "Abridged Compression for WebPKI Certificates in TLS"
-abbrev: "Abridged Certs for TLS"
+title: "Abridged Compression for WebPKI Certificates"
+abbrev: "Abridged Certs"
 category: exp
 
 docname: draft-jackson-tls-cert-abridge-latest
