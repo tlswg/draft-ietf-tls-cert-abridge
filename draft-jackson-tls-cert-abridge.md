@@ -284,7 +284,7 @@ Note that as this draft specifies a compression scheme, it does not impact the n
 
 # Acknowledgments
 
-**TODO**
+The authors thank Martin Thomson and Kathleen Wilson for feedback on early versions of this document.
 
 # CCADB Churn and Dictionary Negotiation {#churn}
 
