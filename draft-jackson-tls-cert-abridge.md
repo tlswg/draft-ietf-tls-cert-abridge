@@ -28,7 +28,7 @@ author:
 
 normative:
  TLSCertCompress: RFC8879
- ZSTD: RFC8478
+ ZSTD: RFC8878
  TLS13: RFC8446
  DATES: RFC3339
 
