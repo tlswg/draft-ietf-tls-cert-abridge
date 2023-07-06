@@ -340,13 +340,21 @@ Typically around 100 to 200 new WebPKI intermediate certificates are issued each
 
 ## Dictionary Negotiation
 
-This draft is currently written with a view to being adopted as a particular TLS Certificate Compression Scheme. However,
-this means that each dictionary used in the wild must have an assigned code point. A new dictionary would likely need to be
-issued no more than yearly. However, negotiating the dictionary used would avoid the overhead of minting a new draft and code point.
-
-**DISCUSS:** A sketch for how dictionary negotiation might work is below.
+This draft is currently written with a view to being adopted as a particular TLS Certificate Compression Scheme. However, this means that each dictionary used in the wild must have an assigned code point. A new dictionary would likely need to be issued no more than yearly. However, negotiating the dictionary used would avoid the overhead of minting a new draft and code point. A sketch for how dictionary negotiation might work is below.
 
 This draft would instead define a new extension, which would define TLS Certificate Compression with ZStandard Dictionaries. Dictionaries would be identified by an IANA-assigned identifier of two bytes, with a further two bytes for the major version and two more for the minor version. Adding new certificates to a dictionary listing would require a minor version bump. Removing certificates or changing the pass 2 dictionary would require a major version bump.
+
+~~~
+struct {
+  uint16 identifier;
+  uint16 major_version;
+  uint16 minor_version;
+} DictionaryId
+
+struct {
+  DictionaryId supported_dictionaries<6..2^16-1>
+} ZStdSharedDictXtn
+~~~
 
 The client lists their known dictionaries in an extension in the ClientHello. The client need only retain and advertise the highest known minor version for any major version of a dictionary they are willing to offer. The server may select any dictionary it has a copy of with matching identifier, matching major version number and a minor version number not greater than the client's minor version number.
 
