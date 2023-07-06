@@ -194,9 +194,9 @@ The algorithm for enumerating the list of compressible intermediate and root cer
 7. Order the list by the date each certificate was included in the CCADB, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.
 8. Associate each element of the list with the concatenation of the constant `0xff` and its index in the list represented as a `uint16`.
 
-**DISCUSS:** The four programs were selected because they represent certificate consumers in the CCADB. Are there any other root programs which ought to be included? The only drawback is a larger disk requirement, since this compression scheme does not impact trust decisions.
+[[**DISCUSS:** The four programs were selected because they represent certificate consumers in the CCADB. Are there any other root programs which ought to be included? The only drawback is a larger disk requirement, since this compression scheme does not impact trust decisions.]]
 
-**TODO:** Ask CCADB to provide an authoritative copy of this listing. A subset of these lists is available in `benchmarks/data` in this draft's repository.
+[[**TODO:** Ask CCADB to provide an authoritative copy of this listing. A subset of these lists is available in `benchmarks/data` in this draft's repository.]]
 
 ### Compression of CA Certificates in Certificate Chain
 
@@ -220,11 +220,11 @@ If the compressed certificate chain cannot be parsed (e.g. due to incorrect leng
 
 This section describes a pass based on Zstandard {{ZSTD}} with application-specified dictionaries. The dictionary is constructed with reference to the list of intermediate and root certificates discussed earlier in {{listing}}, as well as several external sources of information.
 
-**DISCUSS:** This draft is unopinionated about the underlying compression scheme is used as long as it supports application specified dictionaries. Is there an argument for using a different scheme?
+[[**DISCUSS:** This draft is unopinionated about the underlying compression scheme is used as long as it supports application specified dictionaries. Is there an argument for using a different scheme?]]
 
 ### Construction of Shared Dictionary
 
-**DISCUSS:** This section remains a work in progress and needs refinement. The goal is to produce a dictionary of minimal size which provides maximum compression whilst treating every CA equitably. Currently this dictionary occupies ~65KB of space, is equitable and has performance within a ~100 bytes of the best known alternative. This is discussed further in {{eval}}.
+[[**DISCUSS / TODO:** This section remains a work in progress and needs refinement. The goal is to produce a dictionary of minimal size which provides maximum compression whilst treating every CA equitably. Currently this dictionary occupies ~65KB of space, is equitable and has performance within a ~100 bytes of the best known alternative. This is discussed further in {{eval}}.]]
 
 The dictionary is built by systematic combination of the common strings used in certificates by each issuer in the known list described in {{listing}}. This dictionary is constructed in three stages, with the output of each stage being concatenated with the next. Implementations of this scheme need only consume the finished dictionary and do not need to construct it themselves.
 
@@ -243,7 +243,7 @@ Extract the contents of the following extensions from the end-entity certificate
 
 Concatenate the byte representation of each extension (including extension id and length) and copy it to the output. If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
 
-**DISCUSS:** This last step is picking a single certificate issued by each issuer as a canonical reference to use for compression. The ordering chosen allows the dictionary builder to stop traversing CT as soon as they've found an entry for each issuer. It would be much more efficient to just ask CAs to submit this information to the CCADB directly.
+[[**DISCUSS:** This last step is picking a single certificate issued by each issuer as a canonical reference to use for compression. The ordering chosen allows the dictionary builder to stop traversing CT as soon as they've found an entry for each issuer. It would be much more efficient to just ask CAs to submit this information to the CCADB directly.]]
 
 #### Compression of End-Entity Certificates in Certificate Chain
 
@@ -261,7 +261,7 @@ These parameters are recommended in order to achieve the best compression ratio 
 
 # Preliminary Evaluation {#eval}
 
-**NOTE:** This section to be removed prior to publication.
+[[**NOTE:** This section to be removed prior to publication.]]
 
 The storage footprint refers to the on-disk size required for the end-entity dictionary. The other columns report the 5th, 50th and 95th percentile of the resulting certificate chains. The evaluation set was a ~75,000 certificate chains from the Tranco list using the python scripts in the draft's Github repository.
 
@@ -290,7 +290,7 @@ As new CA certificates are added to the CCADB and deployed on the web, new versi
 
 A more detailed analysis and discussion of CA certificate lifetimes and root store operations is included in {{churn}}, as well as an alternative design which would allow for dictionary negotiation rather than fixing one dictionary per code point.
 
-**DISCUSS:** Are there concerns over this approach? Would using at most one code point per year be acceptable? Currently 3 of the 16384 'Specification Required' IANA managed code points are in use.
+[[**DISCUSS:** Are there concerns over this approach? Would using at most one code point per year be acceptable? Currently 3 of the 16384 'Specification Required' IANA managed code points are in use.]]
 
 ## Version Migration
 
@@ -306,7 +306,7 @@ Clients and servers implementing this scheme need to store a listing of root and
 
 As popular web browsers already ship a complete list of trusted intermediate and root certificates, their additional storage requirements are minimal. Servers offering this scheme are intended to be 'full-fat' web servers and so typically have plentiful storage already. This draft is not intended for use in storage-constrained IoT devices, but alternative versions with stripped down listings may be suitable.
 
-**DISCUSS:** The current draft priorities an equitable treatment for every recognized and applicant CA over minimizing storage requirements. The required disk space could be significantly reduced by only including CAs which meet a particular popularity threshold via CT log sampling.
+[[**DISCUSS:** The current draft priorities an equitable treatment for every recognized and applicant CA over minimizing storage requirements. The required disk space could be significantly reduced by only including CAs which meet a particular popularity threshold via CT log sampling.]]
 
 ## Implementation Complexity
 
@@ -322,7 +322,7 @@ Note that as this draft specifies a compression scheme, it does not impact the n
 
 # IANA Considerations
 
-**TODO:** Adopt an identifier for experimental purposes.
+[[**TODO:** Adopt an identifier for experimental purposes.]]
 
 --- back
 
