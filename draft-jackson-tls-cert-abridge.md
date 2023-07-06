@@ -196,7 +196,9 @@ The algorithm for enumerating the list of compressible intermediate and root cer
 7. Order the list by the notBefore date of each certificate, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.
 8. Associate each element of the list with the concatenation of the constant `0x99` and its index in the list represented as a `uint16`.
 
-**DISCUSS**: In the future, CCADB may expose such a listing directly. A subset of these lists is available in `benchmarks/data` in the draft Github repository.
+**DISCUSS:** The four programs were selected because they represent certificate consumers in the CCADB. Are there any other root programs which ought to be included? The only drawback is a larger disk requirement, since this compression scheme does not impact trust decisions.
+
+**TODO:** Ask CCADB to provide an authoritative copy of these lists. A subset of these lists is available in `benchmarks/data` in this draft's repository.
 
 ### Compression of CA Certificates in Certificate Chain
 
@@ -226,13 +228,13 @@ This section describes a pass based on Zstandard {{ZSTD}} with application-speci
 
 The dictionary is built by systematic combination of the common strings used in certificates by each issuer in the known list described in {{listing}}.
 
-**TODO:** This section remains a work in progress. The goal is to produce a dictionary of competitive size and similar storage footprint to a trained Zstandard dictionary targeting end-entity TLS certificates. The procedure below is not yet final and needs improvements.
+**DISCUSS:** This section remains a work in progress. The goal is to produce a dictionary of competitive size and similar storage footprint to a trained Zstandard dictionary targeting end-entity TLS certificates. The procedure below is not yet final and needs improvements. This dictionary occupies ~ 65 KB of space. A comparison of this approach with a conventional trained dictionary is in {{eval}}.
 
 This dictionary is constructed in three stages, with the output of each stage being concatenated with the next.
 
 Firstly, for each intermediate certificate enumerated in the listing in {{listing}}., extract the issuer field ({{Section 4.1.2.4 of !RFC5280}}) and derive the matching authority key identifier ({{Section 4.2.1.1 of RFC5280}}) for the certificate. Order them according to the listing in {{listing}}.
 
-Secondly, take the listing of certificate transparency logs trusted by major browsers {{AppleCTLogs}} {{GoogleCTLogs}} as of `CCADB_SNAPSHOT_TIME` and extract the list of log identifiers. Order them lexicographically.
+Secondly, take the listing of certificate transparency logs trusted by the root programs selected in {{listing}}, which are located at{{AppleCTLogs}} {{GoogleCTLogs}} as of `CCADB_SNAPSHOT_TIME` and extract the list of log identifiers. Remove duplicates and order them lexicographically.
 
 Finally, enumerate all certificates contained within certificate transparency logs above and issued during `CT_CERT_WINDOW`. For each issuer in the listing in {{listing}}, select the witnessed end-entity certificate with the lowest serial number. Extract the contents of the following extensions from the end-entity certificate:
 
