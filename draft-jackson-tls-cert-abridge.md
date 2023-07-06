@@ -117,7 +117,7 @@ informative:
 
 --- abstract
 
-This draft defines a new TLS Certificate Compression scheme which uses a predistributed dictionary of root and intermediate WebPKI certificates.  The scheme effectively removes the root and intermediate certificates from the TLS certificate chain, which smooths the transition to post-quantum certificates. It also achieves a substantial improvement over existing certificate compression schemes whilst treating CAs and website operators equitably and avoiding any new error handling flows. It may also be of interest in other situations where certificate chains are stored, e.g. Certificate Transparency logs.
+This draft defines a new TLS Certificate Compression scheme which uses a shared dictionary of root and intermediate WebPKI certificates. The scheme smooths the transition to post-quantum certificates by eliminating the root and intermediate certificates from the TLS certificate chain without impacting trust negotiation. It also delivers better compression than alternative proposals whilst ensuring fair treatment for both CAs and website operators. It may also be useful in other applications which store certificate chains, e.g. Certificate Transparency logs.
 
 --- middle
 
