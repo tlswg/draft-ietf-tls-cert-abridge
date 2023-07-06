@@ -107,6 +107,7 @@ informative:
     -
       org: "Cisco"
 
+    author:
 
 --- abstract
 
@@ -275,6 +276,16 @@ was given redacted certificate chains with the end-entity subject name and alter
 
 **TODO:** By improving the construction of the shared dictionary in pass 2, we ought to be able to match the wire size of the opaque trained dictionary, albeit likely with a much larger storage footprint in order to fairly treat each CA.
 
+# Deployment Considerations
+
+Although much of this draft is dedicated to the construction of the certificate list and dictionary used in the scheme, implementations are indifferent to these details. Pass 1 can be implemented as a simple string substitution and pass 2 with a single call to permissively licensed and widely distributed Zstandard implementations such as {{ZstdImpl}}. Future versions of this draft which vary the dictionary construction then only require changes to the static data shipped with these implementations and the use of a new code point.
+
+There are two important considerations for clients and servers implementing this draft. Firstly, they must be willing to store the roughly 3MB of static data required. Secondly, in order to gain the most benefit from this scheme they must be willing to update this static data when a new code point is minted which is expected to be not more than yearly and likely less often in practice. Although clients and servers which fall out of date will no longer benefit from the scheme, they will not suffer any other penalties or incompatibilities.
+
+The majority of clients deploying this scheme are expected to be web browsers for whom these considerations are already satisfied. Popular web browsers already ship a full copy of their trusted root and intermediate certificates, so the storage overhead posed by this scheme is negligible. Similarly, modern browsers are typically updated on monthly cycles, and even long term support releases like Firefox ESR are released on a yearly cadence with monthly point updates.
+
+These requirements are practical for the majority of web servers, which can be expected to be receiving updates at least yearly and typically have access to plentiful storage. However, this scheme is unlikely to be practical for IOT devices which may have limited disk space and are unlikely to receive updates once delivered to a consumer. There are several different options for where to implement the scheme, e.g. within the TLS library, as an independent package which can use existing TLS library hooks for custom certificate compression algorithms or as part of a higher level application.
+
 # Security Considerations
 
 This draft does not introduce new security considerations for TLS, except for the considerations already identified in {{TLSCertCompress}}.  In particular incorrect compression or decompression will lead to the TLS connection failing as the two parties will not agree on the transcript and the server's transcript never includes the result of the compressed certificate chain. However, implementors SHOULD use a memory-safe language to implement this compression scheme.
@@ -302,7 +313,7 @@ Typically around 100 to 200 new WebPKI intermediate certificates are issued each
 ## Dictionary Negotiation
 
 This draft is currently written with a view to being adopted as a particular TLS Certificate Compression Scheme. However,
-this means that each dictionary used in the wild must have an assigned codepoint. A new dictionary would likely need to be
+this means that each dictionary used in the wild must have an assigned code point. A new dictionary would likely need to be
 issued no more than yearly. However, negotiating the dictionary used would avoid that overhead.
 
 **DISCUSS:** A sketch for how dictionary negotiation might work is below.
