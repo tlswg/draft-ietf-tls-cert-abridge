@@ -107,7 +107,13 @@ informative:
     -
       org: "Cisco"
 
+  ZStdImpl:
+    title: ZStandard (Zstd)
+    target: https://github.com/facebook/zstd
+    date: 2023-06-05
     author:
+    -
+     org: "Facebook"
 
 --- abstract
 
