@@ -12,14 +12,13 @@ As the scheme removes the overhead of including root and intermediate certificat
 
 This draft is a work in progress, however a preliminary evaluation is available:
 
-| Scheme                                               |   Storage Footprint |   p5 |   p50 |   p95 |
-|------------------------------------------------------|---------------------|------|-------|-------|
-| Original                                             |                   0 | 2308 |  4032 |  5609 |
-| TLS Cert Compression                                 |                   0 | 1619 |  3243 |  3821 |
-| Intermediate Suppression and TLS Cert Compression    |                   0 | 1020 |  1445 |  3303 |
-| **This Draft**                                       |               65336 |  661 |  1060 |  1437 |
-| **This Draft with opaque trained dictionary**        |                3000 |  562 |   931 |  1454 |
-| Hypothetical Optimal Compression                     |                   0 |  377 |   742 |  1075 |
+| Scheme                                               |   p5 |   p50 |   p95 |
+|------------------------------------------------------|------|-------|-------|
+| Original                                             | 2308 |  4032 |  5609 |
+| TLS Cert Compression                                 | 1619 |  3243 |  3821 |
+| Intermediate Suppression and TLS Cert Compression    | 1020 |  1445 |  3303 |
+| **This Draft**                                       |  661 |  1060 |  1437 |
+| Hypothetical Optimal Compression                     |  377 |   742 |  1075 |
 
 A complete table of results and benchmarking scripts can be found in [benchmarks](benchmarks/).
 
