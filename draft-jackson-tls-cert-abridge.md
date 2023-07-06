@@ -244,8 +244,6 @@ Finally, enumerate all certificates contained within certificate transparency lo
 Concatenate the byte representation of each extension (including extension id and length) and copy it to the output.
 If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
 
-**DISCUSS:** This dictionary occupies ~ 65 KB of space. A comparison of this approach with a conventional trained dictionary is in {{eval}}.
-
 #### Compression of End-Entity Certificates in Certificate Chain
 
 The resulting bytes from Pass 1 are passed to ZStandard {{ZSTD}} with the dictionary specified in the previous section. It is RECOMMENDED that the compressor (i.e. the server) use the following parameters:
@@ -260,16 +258,11 @@ The resulting bytes from Pass 1 are passed to ZStandard {{ZSTD}} with the dictio
 
 These parameters are recommended in order to achieve the best compression ratio however implementations MAY use their preferred parameters as these parameters are not used during decompression. With TLS Certificate Compression, the server needs to only perform a single compression at startup and cache the result, so optimizing for maximal compression is recommended. The client's decompression speed is insensitive to these parameters.
 
-**TODO:** These parameters are a work in progress.
-
 # Preliminary Evaluation {#eval}
 
 **DISCUSS:** This section to be removed prior to publication.
 
-This draft is a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available. The storage footprint refers to the on-disk size required for the end-entity dictionary. The other columns report the 5th, 50th and 95th percentile of the resulting certificate chains.
-
-The evaluation set was a ~75,000 certificate chains from the Tranco list. The opaque trained dictionary
-was given redacted certificate chains with the end-entity subject name and alternative names removed.
+This draft is a work in progress, however a preliminary evaluation based on a few thousand certificate chains is available. The storage footprint refers to the on-disk size required for the end-entity dictionary. The other columns report the 5th, 50th and 95th percentile of the resulting certificate chains. The evaluation set was a ~75,000 certificate chains from the Tranco list.
 
 | Scheme                                               |   Storage Footprint |   p5 |   p50 |   p95 |
 |------------------------------------------------------|---------------------|------|-------|-------|
@@ -280,7 +273,11 @@ was given redacted certificate chains with the end-entity subject name and alter
 | **This Draft with opaque trained dictionary**        |                3000 |  562 |   931 |  1454 |
 | Hypothetical Optimal Compression                     |                   0 |  377 |   742 |  1075 |
 
-**TODO:** By improving the construction of the shared dictionary in pass 2, we ought to be able to match the wire size of the opaque trained dictionary, albeit likely with a much larger storage footprint in order to fairly treat each CA.
+ * 'Original' refers to the sampled certificate chains without any compression.
+ * 'TLS Cert Compression' used ZStandard with the parameters configured for maximum compression as defined in {{TLSCertCompress}}.
+ * 'Intermediate Suppression and TLS Cert Compression' was modelled as the elimination of all certificates in the intermediate and root certificates with the Basic Constraints CA value set to true. If a cert chain included an unrecognized certificate with CA status, then no CA certificates were removed from that chain. The cert chain was then passed to 'TLS Cert Compression' as a second pass.
+ * 'This Draft with opaque trained dictionary' refers to pass 1 and pass 2 as defined by this draft, but instead using a 3000 byte dictionary for pass 2 which was produced by the Zstandard dictionary training algorithm. This illustrates a ceiling on what ought to be possible by improving the construction of the pass 2 dictionary in this document. However, using this trained dictionary directly will not treat all CA's equitably, as the dictionary will be biased towards compressing the most popular CAs more effectively.
+ * 'Hypothetical Optimal Compression' is the resulting size of the cert chain after reducing it to only the public key in the end-entity certificate, the CA signature over the EE cert, the embedded SCT signatures and a compresed list of domains in the SAN extension. This represents the best possible compression as it entirely removes any identifiers, field tags and lengths and non-critical extensions such as OCSP, CRL and policy extensions.
 
 # Deployment Considerations
 
