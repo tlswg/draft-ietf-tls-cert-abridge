@@ -3,7 +3,7 @@ title: "Abridged Compression for WebPKI Certificates"
 abbrev: "Abridged Certs"
 category: exp
 
-docname: draft-jackson-tls-cert-abridge-latest
+docname: draft-ietf-tls-cert-abridge-latest
 submissiontype: IETF
 number:
 date:
@@ -17,8 +17,8 @@ venue:
   type: "Working Group"
   mail: "tls@ietf.org"
   arch: "https://mailarchive.ietf.org/arch/browse/tls/"
-  github: "dennisjackson/draft-jackson-tls-cert-abridge"
-  latest: "https://dennisjackson.github.io/draft-jackson-tls-cert-abridge/draft-jackson-tls-cert-abridge.html"
+  github: "tlswg/draft-ietf-tls-cert-abridge"
+  latest: "https://tlswg.github.io/draft-ietf-tls-cert-abridge/draft-ietf-tls-cert-abridge.html"
 
 author:
  -
