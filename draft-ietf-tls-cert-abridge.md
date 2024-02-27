@@ -228,20 +228,20 @@ This section describes a pass based on Zstandard {{ZSTD}} with application-speci
 
 The dictionary is built by systematic combination of the common strings used in certificates by each issuer in the known list described in {{listing}}. This dictionary is constructed in three stages, with the output of each stage being concatenated with the next. Implementations of this scheme need only consume the finished dictionary and do not need to construct it themselves.
 
-Firstly, for each intermediate certificate enumerated in the listing in {{listing}}., extract the issuer field ({{Section 4.1.2.4 of !RFC5280}}) and derive the matching authority key identifier ({{Section 4.2.1.1 of RFC5280}}) for the certificate. Order them according to the listing in {{listing}}.
+* Firstly, for each intermediate certificate enumerated in the listing in {{listing}}., extract the issuer field ({{Section 4.1.2.4 of !RFC5280}}) and derive the matching authority key identifier ({{Section 4.2.1.1 of RFC5280}}) for the certificate. Order them according to the listing in {{listing}}, then copy them to the output.
 
-Secondly, take the listing of certificate transparency logs trusted by the root programs selected in {{listing}}, which are located at{{AppleCTLogs}} {{GoogleCTLogs}} as of `CCADB_SNAPSHOT_TIME` and extract the list of log identifiers. Remove duplicates and order them lexicographically.
+* Secondly, take the listing of certificate transparency logs trusted by the root programs selected in {{listing}}, which are located at{{AppleCTLogs}} {{GoogleCTLogs}} as of `CCADB_SNAPSHOT_TIME` and extract the list of log identifiers. Remove duplicates and order them lexicographically, then copy them to the output.
 
-Finally, enumerate all certificates contained within certificate transparency logs above and witnessed during `CT_CERT_WINDOW`. For each issuer in the listing in {{listing}}, select the first end-entity certificate when ordered by the log id (lexicographically) and latest witnessed date.
+* Finally, enumerate all certificates contained within certificate transparency logs above and witnessed during `CT_CERT_WINDOW`. For each issuer in the listing in {{listing}}, select the first end-entity certificate when ordered by the log id (lexicographically) and latest witnessed date.
 
-Extract the contents of the following extensions from the end-entity certificate selected for each issuer:
+  Extract the contents of the following extensions from the end-entity certificate selected for each issuer:
 
-* Authority Information Access ({{Section 4.2.2.1 of RFC5280}})
-* Certificate Policies  ({{Section 4.2.1.4 of RFC5280}})
-* CRL Distribution Points ({{Section 4.2.1.13 of RFC5280}})
-* Freshest CRL ({{Section 4.2.1.15 of RFC5280}})
+  * Authority Information Access ({{Section 4.2.2.1 of RFC5280}})
+  * Certificate Policies  ({{Section 4.2.1.4 of RFC5280}})
+  * CRL Distribution Points ({{Section 4.2.1.13 of RFC5280}})
+  * Freshest CRL ({{Section 4.2.1.15 of RFC5280}})
 
-Concatenate the byte representation of each extension (including extension id and length) and copy it to the output. If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
+  Concatenate the byte representation of each extension (including extension id and length) and copy it to the output. If no end-entity certificate can be found for an issuer with this process, omit the entry for that issuer.
 
 [[**DISCUSS:** This last step is picking a single certificate issued by each issuer as a canonical reference to use for compression. The ordering chosen allows the dictionary builder to stop traversing CT as soon as they've found an entry for each issuer. It would be much more efficient to just ask CAs to submit this information to the CCADB directly.]]
 
