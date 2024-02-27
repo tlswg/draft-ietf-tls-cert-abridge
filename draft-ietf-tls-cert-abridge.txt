@@ -4,8 +4,8 @@
 
 Transport Layer Security                                      D. Jackson
 Internet-Draft                                                   Mozilla
-Intended status: Experimental                           6 September 2023
-Expires: 9 March 2024
+Intended status: Experimental                           27 February 2024
+Expires: 30 August 2024
 
 
               Abridged Compression for WebPKI Certificates
@@ -55,11 +55,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 March 2024.
+   This Internet-Draft will expire on 30 August 2024.
 
 Copyright Notice
 
-   Copyright (c) 2023 IETF Trust and the persons identified as the
+   Copyright (c) 2024 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -391,39 +391,40 @@ Table of Contents
    next.  Implementations of this scheme need only consume the finished
    dictionary and do not need to construct it themselves.
 
-   Firstly, for each intermediate certificate enumerated in the listing
-   in Section 3.1.1., extract the issuer field (Section 4.1.2.4 of
-   [RFC5280]) and derive the matching authority key identifier
-   (Section 4.2.1.1 of [RFC5280]) for the certificate.  Order them
-   according to the listing in Section 3.1.1.
+   *  Firstly, for each intermediate certificate enumerated in the
+      listing in Section 3.1.1., extract the issuer field
+      (Section 4.1.2.4 of [RFC5280]) and derive the matching authority
+      key identifier (Section 4.2.1.1 of [RFC5280]) for the certificate.
+      Order them according to the listing in Section 3.1.1, then copy
+      them to the output.
 
-   Secondly, take the listing of certificate transparency logs trusted
-   by the root programs selected in Section 3.1.1, which are located
-   at[AppleCTLogs] [GoogleCTLogs] as of CCADB_SNAPSHOT_TIME and extract
-   the list of log identifiers.  Remove duplicates and order them
-   lexicographically.
+   *  Secondly, take the listing of certificate transparency logs
+      trusted by the root programs selected in Section 3.1.1, which are
+      located at[AppleCTLogs] [GoogleCTLogs] as of CCADB_SNAPSHOT_TIME
+      and extract the list of log identifiers.  Remove duplicates and
+      order them lexicographically, then copy them to the output.
 
-   Finally, enumerate all certificates contained within certificate
-   transparency logs above and witnessed during CT_CERT_WINDOW.  For
-   each issuer in the listing in Section 3.1.1, select the first end-
-   entity certificate when ordered by the log id (lexicographically) and
-   latest witnessed date.
+   *  Finally, enumerate all certificates contained within certificate
+      transparency logs above and witnessed during CT_CERT_WINDOW.  For
+      each issuer in the listing in Section 3.1.1, select the first end-
+      entity certificate when ordered by the log id (lexicographically)
+      and latest witnessed date.
 
-   Extract the contents of the following extensions from the end-entity
-   certificate selected for each issuer:
+      Extract the contents of the following extensions from the end-
+      entity certificate selected for each issuer:
 
-   *  Authority Information Access (Section 4.2.2.1 of [RFC5280])
+      -  Authority Information Access (Section 4.2.2.1 of [RFC5280])
 
-   *  Certificate Policies (Section 4.2.1.4 of [RFC5280])
+      -  Certificate Policies (Section 4.2.1.4 of [RFC5280])
 
-   *  CRL Distribution Points (Section 4.2.1.13 of [RFC5280])
+      -  CRL Distribution Points (Section 4.2.1.13 of [RFC5280])
 
-   *  Freshest CRL (Section 4.2.1.15 of [RFC5280])
+      -  Freshest CRL (Section 4.2.1.15 of [RFC5280])
 
-   Concatenate the byte representation of each extension (including
-   extension id and length) and copy it to the output.  If no end-entity
-   certificate can be found for an issuer with this process, omit the
-   entry for that issuer.
+      Concatenate the byte representation of each extension (including
+      extension id and length) and copy it to the output.  If no end-
+      entity certificate can be found for an issuer with this process,
+      omit the entry for that issuer.
 
    [[*DISCUSS:* This last step is picking a single certificate issued by
    each issuer as a canonical reference to use for compression.  The
