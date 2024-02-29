@@ -190,7 +190,7 @@ The algorithm for enumerating the list of compressible intermediate and root cer
 2. Remove all certificates which have an extendedKeyUsage extension but do not have the TLS Server Authentication bit set or the anyExtendedKeyUsage bit set.
 3. Remove all certificates whose notAfter date is on or before `CCADB_SNAPSHOT_TIME`.
 4. Remove all root certificates which are not marked as trusted or in the process of applying to be trusted by at least one of the following browser root programs: Mozilla, Google, Microsoft, Apple.
-5. Remove all intermediate certificates which are not signed by root certificates still in the listing.
+5. Remove all intermediate certificates which do not chain back to root certificates still in the listing.
 6. Remove any certificates which are duplicates (have the same SHA256 certificate fingerprint)
 7. Order the list by the date each certificate was included in the CCADB, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.
 8. Associate each element of the list with the concatenation of the constant `0xff` and its index in the list represented as a `uint16`.
