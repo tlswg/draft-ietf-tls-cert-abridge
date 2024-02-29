@@ -304,8 +304,8 @@ Table of Contents
        following browser root programs: Mozilla, Google, Microsoft,
        Apple.
 
-   5.  Remove all intermediate certificates which are not signed by root
-       certificates still in the listing.
+   5.  Remove all intermediate certificates which do not chain back to
+       root certificates still in the listing.
 
    6.  Remove any certificates which are duplicates (have the same
        SHA256 certificate fingerprint)
