@@ -317,7 +317,12 @@ There are several options for handling the distribution of the associated static
 
 # Security Considerations
 
-This draft does not introduce new security considerations for TLS, except for the considerations already identified in {{TLSCertCompress}}.  In particular incorrect compression or decompression will lead to the TLS connection failing as the client and server transcripts will differ, with at least one necessarily including the original certificate chain rather than the decompressed version. However, implementors SHOULD use a memory-safe language to implement this compression scheme.
+This draft does not introduce new security considerations for TLS, except for the considerations already identified in {{TLSCertCompress}}, in particular:
+
+* The decompressed Certificate message MUST be processed as if it were encoded without being compressed in order to ensure parsing and verification have the same security properties as they would in TLS normally.
+* Since Certificate chains are presented on a per-server-name or per-user basis, a malicious application cannot introduce individual fragments into the Certificate message in order to leak information by modifying the plaintext.
+
+Further, implementors SHOULD use a memory-safe language to implement this compression schemes.
 
 Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer and benefit from this scheme.
 
