@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-02-27T00:32:43.919506+00:00",
+  "timestamp": "2024-02-29T00:32:46.150882+00:00",
   "repo": "tlswg/draft-ietf-tls-cert-abridge",
   "labels": [
     {
@@ -393,25 +393,35 @@
       "id": "PR_kwDOJmBpI85Vg-bY",
       "title": "Clarify which artifacts are 'output'.",
       "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/9",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "robstradling",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "See also https://mailarchive.ietf.org/arch/msg/tls/L-wLDsdZpvHpHQFR0c3mo2oyR4c/",
       "createdAt": "2023-07-14T12:23:26Z",
-      "updatedAt": "2023-07-14T12:26:17Z",
+      "updatedAt": "2024-02-27T13:57:26Z",
       "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
       "baseRefName": "main",
       "baseRefOid": "31cc351fdd29fede90cea8b9eee00ef9b5594673",
       "headRepository": "robstradling/draft-jackson-tls-cert-abridge",
       "headRefName": "clarify_what_is_output",
       "headRefOid": "ca1744d1ee117b2f4c314298ca32a2b074edd69e",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "closedAt": "2024-02-27T12:01:17Z",
+      "mergedAt": "2024-02-27T12:01:17Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "6f7c9cddcba8a23db359771620a4ad8157d142fe"
+      },
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks!",
+          "createdAt": "2024-02-27T12:01:55Z",
+          "updatedAt": "2024-02-27T12:01:55Z"
+        }
+      ],
       "reviews": []
     },
     {
