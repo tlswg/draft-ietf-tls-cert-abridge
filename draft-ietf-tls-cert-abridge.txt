@@ -4,8 +4,8 @@
 
 Transport Layer Security                                      D. Jackson
 Internet-Draft                                                   Mozilla
-Intended status: Experimental                           27 February 2024
-Expires: 30 August 2024
+Intended status: Experimental                           29 February 2024
+Expires: 1 September 2024
 
 
               Abridged Compression for WebPKI Certificates
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 August 2024.
+   This Internet-Draft will expire on 1 September 2024.
 
 Copyright Notice
 
@@ -122,26 +122,31 @@ Table of Contents
    a single flight.  However, in a post-quantum setting, the signatures
    and public keys used in a TLS certificate chain will be typically 10
    to 40 times their current size and cannot be compressed with existing
-   TLS Certificate Compression schemes.  Consequently studies [SCAStudy]
-   [PQStudy] have shown that post-quantum certificate transmission
-   becomes the dominant source of latency in PQ TLS with certificate
-   chains alone expected to exceed even the TCP initial flight limit.
-   This motivates alternative designs for reducing the wire size of
-   post-quantum certificate chains.
+   TLS Certificate Compression schemes because most of the size of the
+   certificate is in high entropy fields such as cryptographic keys and
+   signatures.
+
+   Consequently studies [SCAStudy] [PQStudy] have shown that post-
+   quantum certificate transmission becomes the dominant source of
+   latency in PQ TLS with certificate chains alone expected to exceed
+   even the TCP initial flight limit.  This motivates alternative
+   designs for reducing the wire size of post-quantum certificate
+   chains.
 
 1.2.  Overview
 
-   This draft introduces a new TLS certificate compression scheme
-   [TLSCertCompress] which is intended specifically for WebPKI
-   applications.  It uses a predistributed dictionary consisting of all
-   intermediate and root certificates contained in the root stores of
-   major browsers which is sourced from the Common CA Database [CCADB].
-   As of May 2023, this dictionary would be 3 MB in size and consist of
-   roughly 2000 intermediate certificates and 200 root certificates.
-   The disk footprint can be reduced to near zero as many clients (such
-   as Mozilla Firefox & Google Chrome) are already provisioned with
-   their trusted intermediate and root certificates for compatibility
-   and performance reasons.
+   This draft introduces a new TLS certificate compression scheme which
+   is intended specifically for WebPKI applications and is negotiated
+   using the existing certificate compression extension described in
+   [TLSCertCompress].  It uses a predistributed dictionary consisting of
+   all intermediate and root certificates contained in the root stores
+   of major browsers which is sourced from the Common CA Database
+   [CCADB].  As of May 2023, this dictionary would be 3 MB in size and
+   consist of roughly 2000 intermediate certificates and 200 root
+   certificates.  The disk footprint can be reduced to near zero as many
+   clients (such as Mozilla Firefox & Google Chrome) are already
+   provisioned with their trusted intermediate and root certificates for
+   compatibility and performance reasons.
 
    Using a shared dictionary allows for this compression scheme to
    deliver dramatically more effective compression than previous
@@ -167,11 +172,12 @@ Table of Contents
    a root store, a process which typically takes more than a year.
    Consequently, applicant root certificates can be added to new
    versions of this scheme ahead of any trust decisions, allowing new
-   CAs to compete on equal terms with existing CAs.  As a result this
-   scheme is equitable in so far as it provides equal benefits for all
-   CAs in the WebPKI, doesn't privilege any particular end-entity
-   certificate or website and allows WebPKI clients to make individual
-   trust decisions without fear of breakage.
+   CAs to compete on equal terms with existing CAs as soon as they are
+   approved for inclusion in a root program.  As a result this scheme is
+   equitable in so far as it provides equal benefits for all CAs in the
+   WebPKI, doesn't privilege any particular end-entity certificate or
+   website and allows WebPKI clients to make individual trust decisions
+   without fear of breakage.
 
 1.3.  Relationship to other drafts
 
@@ -455,11 +461,12 @@ Table of Contents
 
    These parameters are recommended in order to achieve the best
    compression ratio however implementations MAY use their preferred
-   parameters as these parameters are not used during decompression.
-   With TLS Certificate Compression, the server needs to only perform a
-   single compression at startup and cache the result, so optimizing for
-   maximal compression is recommended.  The client's decompression speed
-   is insensitive to these parameters.
+   parameters as long as the resulting output can be decompressed by a
+   [ZSTD]-compliant implementation.  With TLS Certificate Compression,
+   the server needs to only perform a single compression at startup and
+   cache the result, so optimizing for maximal compression is
+   recommended.  The client's decompression speed is insensitive to
+   these parameters.
 
 4.  Preliminary Evaluation
 

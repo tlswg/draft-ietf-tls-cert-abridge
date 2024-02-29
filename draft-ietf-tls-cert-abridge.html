@@ -1028,7 +1028,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Jackson</td>
-<td class="center">Expires 30 August 2024</td>
+<td class="center">Expires 1 September 2024</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1041,12 +1041,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-tls-cert-abridge-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-02-27" class="published">27 February 2024</time>
+<time datetime="2024-02-29" class="published">29 February 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Experimental</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2024-08-30">30 August 2024</time></dd>
+<dd class="expires"><time datetime="2024-09-01">1 September 2024</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1096,7 +1096,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 30 August 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 1 September 2024.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1238,8 +1238,8 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-motivation" class="section-name selfRef">Motivation</a>
         </h3>
 <p id="section-1.1-1">When a server responds to a TLS Client Hello, the size of its initial flight of packets is limited by the underlying transport protocol. If the size limit is exceeded, the server must wait for the client to acknowledge receipt before concluding the flight, incurring the additional latency of a round trip before the handshake can complete. For TLS handshakes over TCP, the size limit is typically around 14,500 bytes. For TLS handshakes in QUIC, the limit is much lower at a maximum of 4500 bytes (<span>[<a href="#RFC9000" class="cite xref">RFC9000</a>], <a href="https://rfc-editor.org/rfc/rfc9000#section-8.1" class="relref">Section 8.1</a></span>).<a href="#section-1.1-1" class="pilcrow">¶</a></p>
-<p id="section-1.1-2">The existing compression schemes used in <span>[<a href="#TLSCertCompress" class="cite xref">TLSCertCompress</a>]</span> have been shown to deliver a substantial improvement in QUIC handshake latency <span>[<a href="#FastlyStudy" class="cite xref">FastlyStudy</a>]</span>, <span>[<a href="#QUICStudy" class="cite xref">QUICStudy</a>]</span> by reducing the size of server's certificate chain and so fitting the server's initial messages within a single flight. However, in a post-quantum setting, the signatures and public keys used in a TLS certificate chain will be typically 10 to 40 times their current size and cannot be compressed with existing TLS Certificate Compression schemes.
-Consequently studies <span>[<a href="#SCAStudy" class="cite xref">SCAStudy</a>]</span> <span>[<a href="#PQStudy" class="cite xref">PQStudy</a>]</span> have shown that post-quantum certificate transmission becomes the dominant source of latency in PQ TLS with certificate chains alone expected to exceed even the TCP initial flight limit. This motivates alternative designs for reducing the wire size of post-quantum certificate chains.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">The existing compression schemes used in <span>[<a href="#TLSCertCompress" class="cite xref">TLSCertCompress</a>]</span> have been shown to deliver a substantial improvement in QUIC handshake latency <span>[<a href="#FastlyStudy" class="cite xref">FastlyStudy</a>]</span>, <span>[<a href="#QUICStudy" class="cite xref">QUICStudy</a>]</span> by reducing the size of server's certificate chain and so fitting the server's initial messages within a single flight. However, in a post-quantum setting, the signatures and public keys used in a TLS certificate chain will be typically 10 to 40 times their current size and cannot be compressed with existing TLS Certificate Compression schemes because most of the size of the certificate is in high entropy fields such as cryptographic keys and signatures.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-3">Consequently studies <span>[<a href="#SCAStudy" class="cite xref">SCAStudy</a>]</span> <span>[<a href="#PQStudy" class="cite xref">PQStudy</a>]</span> have shown that post-quantum certificate transmission becomes the dominant source of latency in PQ TLS with certificate chains alone expected to exceed even the TCP initial flight limit. This motivates alternative designs for reducing the wire size of post-quantum certificate chains.<a href="#section-1.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="overview">
@@ -1247,9 +1247,9 @@ Consequently studies <span>[<a href="#SCAStudy" class="cite xref">SCAStudy</a>]<
         <h3 id="name-overview">
 <a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-overview" class="section-name selfRef">Overview</a>
         </h3>
-<p id="section-1.2-1">This draft introduces a new TLS certificate compression scheme <span>[<a href="#TLSCertCompress" class="cite xref">TLSCertCompress</a>]</span> which is intended specifically for WebPKI applications. It uses a predistributed dictionary consisting of all intermediate and root certificates contained in the root stores of major browsers which is sourced from the Common CA Database <span>[<a href="#CCADB" class="cite xref">CCADB</a>]</span>. As of May 2023, this dictionary would be 3 MB in size and consist of roughly 2000 intermediate certificates and 200 root certificates. The disk footprint can be reduced to near zero as many clients (such as Mozilla Firefox &amp; Google Chrome) are already provisioned with their trusted intermediate and root certificates for compatibility and performance reasons.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
+<p id="section-1.2-1">This draft introduces a new TLS certificate compression scheme which is intended specifically for WebPKI applications and is negotiated using the existing certificate compression extension described in <span>[<a href="#TLSCertCompress" class="cite xref">TLSCertCompress</a>]</span>. It uses a predistributed dictionary consisting of all intermediate and root certificates contained in the root stores of major browsers which is sourced from the Common CA Database <span>[<a href="#CCADB" class="cite xref">CCADB</a>]</span>. As of May 2023, this dictionary would be 3 MB in size and consist of roughly 2000 intermediate certificates and 200 root certificates. The disk footprint can be reduced to near zero as many clients (such as Mozilla Firefox &amp; Google Chrome) are already provisioned with their trusted intermediate and root certificates for compatibility and performance reasons.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
 <p id="section-1.2-2">Using a shared dictionary allows for this compression scheme to deliver dramatically more effective compression than previous schemes, reducing the size of certificate chains in use today by ~75%, significantly improving on the ~25% reduction achieved by existing schemes. A preliminary evaluation (<a href="#eval" class="auto internal xref">Section 4</a>) of this scheme suggests that 50% of certificate chains in use today would be compressed to under 1000 bytes and 95% to under 1500 bytes. Similarly to <span>[<a href="#SCA" class="cite xref">SCA</a>]</span>, this scheme effectively removes the CA certificates from the certificate chain on the wire but this draft achieves a much better compression ratio, since <span>[<a href="#SCA" class="cite xref">SCA</a>]</span> removes the redundant information in chain that existing TLS Certificate Compression schemes exploit and is more fragile in the presence of out of sync clients or servers.<a href="#section-1.2-2" class="pilcrow">¶</a></p>
-<p id="section-1.2-3">Note that as this is only a compression scheme, it does not impact any trust decisions in the TLS handshake. A client can offer this compression scheme whilst only trusting a subset of the certificates in the CCADB certificate listing, similarly a server can offer this compression scheme whilst using a certificate chain which does not chain back to a WebPKI root. Furthermore, new root certificates are typically included in the CCADB at the start of their application to a root store, a process which typically takes more than a year. Consequently, applicant root certificates can be added to new versions of this scheme ahead of any trust decisions, allowing new CAs to compete on equal terms with existing CAs. As a result this scheme is equitable in so far as it provides equal benefits for all CAs in the WebPKI, doesn't privilege any particular end-entity certificate or website and allows WebPKI clients to make individual trust decisions without fear of breakage.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
+<p id="section-1.2-3">Note that as this is only a compression scheme, it does not impact any trust decisions in the TLS handshake. A client can offer this compression scheme whilst only trusting a subset of the certificates in the CCADB certificate listing, similarly a server can offer this compression scheme whilst using a certificate chain which does not chain back to a WebPKI root. Furthermore, new root certificates are typically included in the CCADB at the start of their application to a root store, a process which typically takes more than a year. Consequently, applicant root certificates can be added to new versions of this scheme ahead of any trust decisions, allowing new CAs to compete on equal terms with existing CAs as soon as they are approved for inclusion in a root program. As a result this scheme is equitable in so far as it provides equal benefits for all CAs in the WebPKI, doesn't privilege any particular end-entity certificate or website and allows WebPKI clients to make individual trust decisions without fear of breakage.<a href="#section-1.2-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="relationship-to-other-drafts">
@@ -1460,7 +1460,7 @@ Concatenate the byte representation of each extension (including extension id an
                 <p id="section-3.2.1.1-2.7.1"><code>force_max_window=1</code><a href="#section-3.2.1.1-2.7.1" class="pilcrow">¶</a></p>
 </li>
             </ul>
-<p id="section-3.2.1.1-3">These parameters are recommended in order to achieve the best compression ratio however implementations <span class="bcp14">MAY</span> use their preferred parameters as these parameters are not used during decompression. With TLS Certificate Compression, the server needs to only perform a single compression at startup and cache the result, so optimizing for maximal compression is recommended. The client's decompression speed is insensitive to these parameters.<a href="#section-3.2.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.2.1.1-3">These parameters are recommended in order to achieve the best compression ratio however implementations <span class="bcp14">MAY</span> use their preferred parameters as long as the resulting output can be decompressed by a <span>[<a href="#ZSTD" class="cite xref">ZSTD</a>]</span>-compliant implementation. With TLS Certificate Compression, the server needs to only perform a single compression at startup and cache the result, so optimizing for maximal compression is recommended. The client's decompression speed is insensitive to these parameters.<a href="#section-3.2.1.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
