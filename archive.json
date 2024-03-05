@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-03-03T00:35:15.837812+00:00",
+  "timestamp": "2024-03-05T00:32:22.404012+00:00",
   "repo": "tlswg/draft-ietf-tls-cert-abridge",
   "labels": [
     {
@@ -348,9 +348,17 @@
       "labels": [],
       "body": "What does the client do if the server only does Pass 1 and compresses / omits the chain certs but does not compress the end-entity certs (Pass 2)?\r\n\r\nThe client should be fine with that. It should be able to reconstruct the chain and used the uncompressed end-entity cert. It should not fail the handshake. \r\n\r\nI am suggesting for the Implementation Complexity Section to say something like\r\n\r\n> Servers MAY chose to compress just the cert chain or the end-certificate depending on their ability to perform Pass 1 or 2 respectively. Client MUST be able to process a compressed chain or an end-entity certificate independently. \r\n\r\nor something like that. \r\n",
       "createdAt": "2024-03-02T04:04:40Z",
-      "updatedAt": "2024-03-02T04:08:41Z",
+      "updatedAt": "2024-03-04T15:48:10Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I can see two different ways to handle it. Either as you suggest, we have it be a runtime decision and we just prefix the compressed form with a byte to indicate whether pass 2 has been used. Alternatively, we can define two codepoints, (pass 1 + pass 2, pass 1).\r\n\r\nI'd suggest we gather performance figures first, then make a decision on the right way forward. ",
+          "createdAt": "2024-03-04T15:48:09Z",
+          "updatedAt": "2024-03-04T15:48:09Z"
+        }
+      ]
     }
   ],
   "pulls": [
