@@ -192,7 +192,7 @@ The algorithm for enumerating the list of compressible intermediate and root cer
 4. Remove all root certificates which are not marked as trusted or in the process of applying to be trusted by at least one of the following browser root programs: Mozilla, Google, Microsoft, Apple.
 5. Remove all intermediate certificates which do not chain back to root certificates still in the listing.
 6. Remove any certificates which are duplicates (have the same SHA256 certificate fingerprint)
-7. Order the list by the date each certificate was included in the CCADB, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.
+7. Order the list of certificates by the timestamp for when each was added to the CCADB, breaking any ties with the lexicographic ordering of the SHA256 certificate fingerprint.
 8. Associate each element of the list with the concatenation of the constant `0xff` and its index in the list represented as a `uint16`.
 
 [[**DISCUSS:** The four programs were selected because they represent certificate consumers in the CCADB. Are there any other root programs which ought to be included? The only drawback is a larger disk requirement, since this compression scheme does not impact trust decisions.]]
