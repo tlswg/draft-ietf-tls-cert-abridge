@@ -92,10 +92,11 @@ Table of Contents
      5.3.  Disk Space Requirements
      5.4.  Implementation Complexity
    6.  Security Considerations
-   7.  IANA Considerations
-   8.  References
-     8.1.  Normative References
-     8.2.  Informative References
+   7.  Privacy Considerations
+   8.  IANA Considerations
+   9.  References
+     9.1.  Normative References
+     9.2.  Informative References
    Appendix A.  Acknowledgments
    Appendix B.  CCADB Churn and Dictionary Negotiation
      B.1.  CCADB Churn
@@ -684,13 +685,32 @@ Table of Contents
    servers who use roots or intermediates outside the CCADB can still
    offer and benefit from this scheme.
 
-7.  IANA Considerations
+7.  Privacy Considerations
+
+   Some servers may attempt to identify clients based on their TLS
+   configuration, known as TLS fingerprinting [FingerprintingPost].  If
+   there is significant diversity in the number of TLS Certificate
+   Compression schemes supported by clients, this might enable more
+   powerful fingerprinting attacks.  However, this compression scheme
+   can be used by a wide range of clients, even if they make different
+   or contradictory trust decisions and so the resulting diversity is
+   expected to be low.
+
+   In TLS1.3, the extension carrying the client's supported TLS
+   Certificate Compression schemes is typically transmitted unencrypted
+   and so can also be exploited by passive network observers in addition
+   to the server with whom the client is communicating.  Deploying
+   Encrypted Client Hello [ECH] enables the encryption of the Client
+   Hello and the TLS Certificate Compression extension within it which
+   can mitigate this leakage.
+
+8.  IANA Considerations
 
    [[*TODO:* Adopt an identifier for experimental purposes.]]
 
-8.  References
+9.  References
 
-8.1.  Normative References
+9.1.  Normative References
 
    [AppleCTLogs]
               Apple, "Certificate Transparency Logs trusted by Apple", 5
@@ -742,16 +762,28 @@ Table of Contents
               DOI 10.17487/RFC8878, February 2021,
               <https://www.rfc-editor.org/rfc/rfc8878>.
 
-8.2.  Informative References
+9.2.  Informative References
 
    [CCADB]    Mozilla, Microsoft, Google, Apple, and Cisco, "Common CA
               Database", 5 June 2023, <https://www.ccadb.org/>.
+
+   [ECH]      Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
+              Encrypted Client Hello", Work in Progress, Internet-Draft,
+              draft-ietf-tls-esni-17, 9 October 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
+              esni-17>.
 
    [FastlyStudy]
               McManus, P., "Does the QUIC handshake require compression
               to be fast?", 18 May 2020, <https://www.fastly.com/blog/
               quic-handshake-tls-compression-certificates-extension-
               study>.
+
+   [FingerprintingPost]
+              Team, F. S. R., "The state of TLS fingerprinting What’s
+              Working, What Isn’t, and What’s Next", 20 July 2022,
+              <https://www.fastly.com/blog/the-state-of-tls-
+              fingerprinting-whats-working-what-isnt-and-whats-next>.
 
    [I-D.ietf-cose-cbor-encoded-cert-05]
               Mattsson, J. P., Selander, G., Raza, S., Höglund, J., and
