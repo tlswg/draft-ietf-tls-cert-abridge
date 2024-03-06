@@ -67,6 +67,7 @@ normative:
 informative:
  RFC9000:
  SCA: I-D.kampanakis-tls-scas-latest
+ ECH: I-D.draft-ietf-tls-esni-17
 
  FastlyStudy:
    title: Does the QUIC handshake require compression to be fast?
@@ -114,6 +115,15 @@ informative:
    author:
     -
       org: "Facebook"
+
+ FingerprintingPost:
+   title: "The state of TLS fingerprinting What’s Working, What Isn’t, and What’s Next"
+   target: https://www.fastly.com/blog/the-state-of-tls-fingerprinting-whats-working-what-isnt-and-whats-next
+   date: 2022-07-20
+   author:
+    -
+      name: "Fastly Security Research Team"
+      org: "Fastly"
 
 --- abstract
 
@@ -327,6 +337,12 @@ This draft does not introduce new security considerations for TLS, except for th
 Further, implementors SHOULD use a memory-safe language to implement this compression schemes.
 
 Note that as this draft specifies a compression scheme, it does not impact the negotiation of trust between clients and servers and is robust in the face of changes to CCADB or trust in a particular WebPKI CA. The client's trusted list of CAs does not need to be a subset or superset of the CCADB list and revocation of trust in a CA does not impact the operation of this compression scheme. Similarly, servers who use roots or intermediates outside the CCADB can still offer and benefit from this scheme.
+
+# Privacy Considerations
+
+Some servers may attempt to identify clients based on their TLS configuration, known as TLS fingerprinting {{FingerprintingPost}}. If there is significant diversity in the number of TLS Certificate Compression schemes supported by clients, this might enable more powerful fingerprinting attacks. However, this compression scheme can be used by a wide range of clients, even if they make different or contradictory trust decisions and so the resulting diversity is expected to be low.
+
+In TLS1.3, the extension carrying the client's supported TLS Certificate Compression schemes is typically transmitted unencrypted and so can also be exploited by passive network observers in addition to the server with whom the client is communicating. Deploying Encrypted Client Hello {{ECH}} enables the encryption of the Client Hello and the TLS Certificate Compression extension within it which can mitigate this leakage.
 
 # IANA Considerations
 
