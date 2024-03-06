@@ -4,8 +4,8 @@
 
 Transport Layer Security                                      D. Jackson
 Internet-Draft                                                   Mozilla
-Intended status: Experimental                           29 February 2024
-Expires: 1 September 2024
+Intended status: Experimental                               6 March 2024
+Expires: 7 September 2024
 
 
               Abridged Compression for WebPKI Certificates
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 September 2024.
+   This Internet-Draft will expire on 7 September 2024.
 
 Copyright Notice
 
@@ -310,9 +310,9 @@ Table of Contents
    6.  Remove any certificates which are duplicates (have the same
        SHA256 certificate fingerprint)
 
-   7.  Order the list by the date each certificate was included in the
-       CCADB, breaking ties with the lexicographic ordering of the
-       SHA256 certificate fingerprint.
+   7.  Order the list of certificates by the timestamp for when each was
+       added to the CCADB, breaking any ties with the lexicographic
+       ordering of the SHA256 certificate fingerprint.
 
    8.  Associate each element of the list with the concatenation of the
        constant 0xff and its index in the list represented as a uint16.
