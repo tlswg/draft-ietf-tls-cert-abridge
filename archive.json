@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-03-05T00:32:22.404012+00:00",
+  "timestamp": "2024-03-07T00:27:04.501217+00:00",
   "repo": "tlswg/draft-ietf-tls-cert-abridge",
   "labels": [
     {
@@ -158,15 +158,15 @@
       "id": "I_kwDOJmBpI85squzb",
       "title": "Fingerprinting",
       "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/10",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "martinthomson",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "This will add some number of new compression schemes.  Clients might support more than one.\r\n\r\nIf there is some diversity in client support for different compression types, that might create greater distinction between clients from a fingerprinting perspective.\r\n\r\nA few things mitigate this:\r\n\r\n1. For the most part, support for different schemes will correlate with other fingerprinting signals (like the choice of implementation) and so contribute no information.\r\n2. ECH can cover the client choice.",
       "createdAt": "2023-07-26T20:51:06Z",
-      "updatedAt": "2023-08-02T02:57:08Z",
-      "closedAt": null,
+      "updatedAt": "2024-03-06T12:39:44Z",
+      "closedAt": "2024-03-06T12:39:44Z",
       "comments": [
         {
           "author": "csosto-pk",
@@ -348,7 +348,7 @@
       "labels": [],
       "body": "What does the client do if the server only does Pass 1 and compresses / omits the chain certs but does not compress the end-entity certs (Pass 2)?\r\n\r\nThe client should be fine with that. It should be able to reconstruct the chain and used the uncompressed end-entity cert. It should not fail the handshake. \r\n\r\nI am suggesting for the Implementation Complexity Section to say something like\r\n\r\n> Servers MAY chose to compress just the cert chain or the end-certificate depending on their ability to perform Pass 1 or 2 respectively. Client MUST be able to process a compressed chain or an end-entity certificate independently. \r\n\r\nor something like that. \r\n",
       "createdAt": "2024-03-02T04:04:40Z",
-      "updatedAt": "2024-03-04T15:48:10Z",
+      "updatedAt": "2024-03-05T04:14:55Z",
       "closedAt": null,
       "comments": [
         {
@@ -357,6 +357,13 @@
           "body": "I can see two different ways to handle it. Either as you suggest, we have it be a runtime decision and we just prefix the compressed form with a byte to indicate whether pass 2 has been used. Alternatively, we can define two codepoints, (pass 1 + pass 2, pass 1).\r\n\r\nI'd suggest we gather performance figures first, then make a decision on the right way forward. ",
           "createdAt": "2024-03-04T15:48:09Z",
           "updatedAt": "2024-03-04T15:48:09Z"
+        },
+        {
+          "author": "csosto-pk",
+          "authorAssociation": "NONE",
+          "body": "Maybe these will not matter for the scenario I am considering:\r\n\r\nLet\u2019s say the client advertised support for draft-ietf-tls-cert-abridge. And the server sent back \r\n- CompressedCertificate which includes the 2 identifiers for the ICA and RootCA from Pass 1.\r\n- uncompressed, traditional CertificateEnty of the end-entity certificate\r\n\r\nOr it sent back\r\n\r\n- uncompressed, traditional CertificateEnties for the  ICA and RootCA certs\r\n- CompressedCertificate which includes the ZStandard compressed (based on the Pass2 dictionary) end-entity cert \r\n\r\nMy point is that nothing should prevent the client from being able to handle these two scenarios and normative language should point that out. Any software that can parse certs in compressed form, ought to be able to parse them in regular form if the server did not support Pass1 (CA cers were not available for some reason) or Pass2 (eg. if CT Logs were not available for some reason).\r\n\r\nAm I overseeing something?\r\n",
+          "createdAt": "2024-03-05T04:14:54Z",
+          "updatedAt": "2024-03-05T04:14:54Z"
         }
       ]
     }
@@ -501,21 +508,21 @@
       "id": "PR_kwDOJmBpI85eL6k3",
       "title": "Handle edge case where dict versions can disagree on index",
       "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/13",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "jmcrawford45",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Reading step 7 \"Order the list by the date each certificate was included in the CCADB, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.\" along with some of the later assumptions on newer versions of the dictionary agreeing on existing keys, I believe there's an edge case where a snapshot occurs during a day in which multiple entries are added to CCADB. I am picturing a scenario where two CAs are added on a snapshot date (one before and one after a snapshot where the latter has a digest lexicographically preceding the former). In this scenario, future snapshots would have a different list index than the older snapshot from the addition date, causing verification failure after decompression. I've added an additional condition that should avoid this edge case at a minimal cost that still preserves the rest of the algorithm.",
       "createdAt": "2023-10-31T04:00:23Z",
-      "updatedAt": "2024-02-29T13:17:03Z",
+      "updatedAt": "2024-03-06T12:40:19Z",
       "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
       "baseRefName": "main",
       "baseRefOid": "6f7c9cddcba8a23db359771620a4ad8157d142fe",
       "headRepository": "jmcrawford45/draft-ietf-tls-cert-abridge",
       "headRefName": "patch-1",
       "headRefOid": "abde7f74a447d6a46b5cade1a573d1f3f72e4c69",
-      "closedAt": null,
+      "closedAt": "2024-03-06T12:40:19Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -526,6 +533,13 @@
           "body": "That's a good point about the ambiguity. Rather than add an extra step, I'd rather clarify that we use the timestamp of when the certificate was first included. We know this is behind the cutoff of `CCADB_SNAPSHOT_TIME`. Does the PR in #19 address the concern adequately? ",
           "createdAt": "2024-02-29T13:17:02Z",
           "updatedAt": "2024-02-29T13:17:02Z"
+        },
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Closed in favour of #19 ",
+          "createdAt": "2024-03-06T12:40:19Z",
+          "updatedAt": "2024-03-06T12:40:19Z"
         }
       ],
       "reviews": []
@@ -535,24 +549,26 @@
       "id": "PR_kwDOJmBpI85oSvke",
       "title": "Clarify certificate ordering",
       "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/19",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "dennisjackson",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-02-29T13:14:42Z",
-      "updatedAt": "2024-02-29T13:14:42Z",
+      "updatedAt": "2024-03-06T12:39:31Z",
       "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
       "baseRefName": "main",
       "baseRefOid": "6f7c9cddcba8a23db359771620a4ad8157d142fe",
       "headRepository": "tlswg/draft-ietf-tls-cert-abridge",
       "headRefName": "certificate-ordering",
       "headRefOid": "aff2724dba606c395ff4ee24bf8042a7d48aba32",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-03-06T12:39:31Z",
+      "mergedAt": "2024-03-06T12:39:31Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "03c6b9980217bf6fa12d1810717295957f65d611"
+      },
       "comments": [],
       "reviews": []
     },
@@ -561,24 +577,26 @@
       "id": "PR_kwDOJmBpI85oTTIu",
       "title": "Add privacy considerations and fingerprinting. Resolves #10",
       "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/21",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "dennisjackson",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2024-02-29T14:26:17Z",
-      "updatedAt": "2024-02-29T14:26:17Z",
+      "updatedAt": "2024-03-06T12:39:43Z",
       "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
       "baseRefName": "main",
       "baseRefOid": "2a99b983242ee2bbfc96736b106d04a6b2ea6d63",
       "headRepository": "tlswg/draft-ietf-tls-cert-abridge",
       "headRefName": "privacy-considerations",
       "headRefOid": "caf1eea36e06965165fa06f63c63e9bf1caa9fda",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-03-06T12:39:43Z",
+      "mergedAt": "2024-03-06T12:39:43Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "56d1de64d244629fdb3426002662527aab974871"
+      },
       "comments": [],
       "reviews": []
     }
