@@ -1,0 +1,604 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2024-05-07T00:34:54.085304+00:00",
+  "repo": "tlswg/draft-ietf-tls-cert-abridge",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    },
+    {
+      "name": "idea",
+      "description": "",
+      "color": "AFD97B"
+    }
+  ],
+  "issues": [
+    {
+      "number": 3,
+      "id": "I_kwDOJmBpI85qGCYf",
+      "title": "Dates (RFC 3339)",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/3",
+      "state": "CLOSED",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I don't know how to interpret \"01.12.22\" as currently used.  I'm not completely sure how to correct it, even, though I can guess.",
+      "createdAt": "2023-06-29T01:19:04Z",
+      "updatedAt": "2023-06-29T10:37:15Z",
+      "closedAt": "2023-06-29T10:37:15Z",
+      "comments": []
+    },
+    {
+      "number": 4,
+      "id": "I_kwDOJmBpI85qGCf-",
+      "title": "Length prefix compressed part",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/4",
+      "state": "CLOSED",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "RFC 8879 includes a length prefix so that the recipient doesn't have to commit unbounded memory for certificates.  Is that the goal here also?  It might be good to say.",
+      "createdAt": "2023-06-29T01:19:58Z",
+      "updatedAt": "2023-06-29T09:59:34Z",
+      "closedAt": "2023-06-29T09:59:34Z",
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": " RFC 8879 handles the length prefix and compression algorithm negotiation. For the individual compression algorithms, it just points to specs like RFC 8478 (ZStandard) which aren't aware of any of the TLS packaging. So I think the natural thing to do here is just define the compression algorithm as 8478 does and leave the bookkeeping to 8879. \r\n\r\n> If the specified compression algorithm is zstd, the Certificate message MUST be compressed with the Zstandard compression algorithm, as defined in RFC8478",
+          "createdAt": "2023-06-29T09:59:34Z",
+          "updatedAt": "2023-06-29T09:59:34Z"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "id": "I_kwDOJmBpI85rFfcR",
+      "title": "Minimize Server-Side Storage: Compression with partial Pass 1 Dictionary",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/6",
+      "state": "CLOSED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "idea"
+      ],
+      "body": "WebPKI clients typically ship most of the pass 1 dictionary already but servers would incur the full disk footprint (~3MB) which might be a barrier to adoption. \r\n\r\nInsight: whilst a full copy of the Pass 1 Dictionary is needed for decompression, compressors can choose to use subsets of the pass 1 dictionary and still interoperate with any decompressor. Obviously they have to keep the same identifiers as in the full dictionary and the outcome is just that less is compressed during pass 1. \r\n\r\nIf we permit this we unlock two additional deployment options. Firstly, operators who know their implementations will only be used with a specific CA (e.g. a major CDN with an in-house CA or a family of IoT devices) need only distribute the actually used certificates in the pass 1 dictionary. Secondly, TLS libraries targeting widespread deployment but not willing to pay the full 3MB cost can choose to ship only the most popular CA certificates according to their storage threshold. Due to the unfortunate centralisation in the CA space, this could be as little as a few KB. This would have the unfortunate effect of encouraging further centralisation.\r\n\r\nNote: This only applies to Pass 1 dictionaries. Pass 2 Zstandard dictionaries must be bitwise identical between compressor and decompressor.  \r\n\r\n",
+      "createdAt": "2023-07-10T11:50:05Z",
+      "updatedAt": "2024-02-29T16:16:25Z",
+      "closedAt": "2024-02-29T14:42:12Z",
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Better idea: Servers can just use a short cryptographic hash to recognise certificates in the pass 1 list. This was presented at IETF 117 in the slide deck. ",
+          "createdAt": "2024-02-29T14:41:08Z",
+          "updatedAt": "2024-02-29T16:16:25Z"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "id": "I_kwDOJmBpI85rQ6iv",
+      "title": "Remove dependency on CT for Pass 2 Construction",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/7",
+      "state": "OPEN",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The draft currently relies on data fetched from CT to populate the pass 2 dictionary. It would be better to have the CA's provide this data themselves via the CCADB. \r\n\r\nA few choices need to be made. E.g. whether to allow the CA to specify any binary blob they like up to some size limit or to prescribe the data be in a particular format, e.g. a list of extensions. Similarly, does each CA get a size allocation or is each intermediate certificate given an allocation?",
+      "createdAt": "2023-07-11T19:07:55Z",
+      "updatedAt": "2023-07-11T19:10:01Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 8,
+      "id": "I_kwDOJmBpI85rU8NU",
+      "title": "Compare Brotli with Zstd",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/8",
+      "state": "OPEN",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The draft is agnostic as to which compression scheme is used for pass 2 as long as it supports the use of custom shared dictionaries. There's been recent work on a new Brotli format for use with shared dictionaries (IETF [draft](https://datatracker.ietf.org/doc/html/draft-vandevenne-shared-brotli-format-09#section-2)) which might see use in HTTP transports (WICG [draft](https://github.com/WICG/compression-dictionary-transport)). \r\n\r\nSpecific questions: \r\n\r\n1. How does the quality and maturity of software implementations compare? \r\n2. How does compression speed / ratio compare? \r\n3. Does Brotli's existing deployment in TLS Certificate Compression give it an advantage? \r\n4. Are existing Brotli implementations forward compatible with the shared dictionary format? ",
+      "createdAt": "2023-07-12T10:16:53Z",
+      "updatedAt": "2023-07-12T10:16:53Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 10,
+      "id": "I_kwDOJmBpI85squzb",
+      "title": "Fingerprinting",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/10",
+      "state": "CLOSED",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This will add some number of new compression schemes.  Clients might support more than one.\r\n\r\nIf there is some diversity in client support for different compression types, that might create greater distinction between clients from a fingerprinting perspective.\r\n\r\nA few things mitigate this:\r\n\r\n1. For the most part, support for different schemes will correlate with other fingerprinting signals (like the choice of implementation) and so contribute no information.\r\n2. ECH can cover the client choice.",
+      "createdAt": "2023-07-26T20:51:06Z",
+      "updatedAt": "2024-03-06T12:39:44Z",
+      "closedAt": "2024-03-06T12:39:44Z",
+      "comments": [
+        {
+          "author": "csosto-pk",
+          "authorAssociation": "NONE",
+          "body": "Some text that addresses this from the [SCA] draft. The arguments are similar to Martin's \r\n\r\n> This document creates an unencrypted signal in the ClientHello that might be used to identify which clients believe that they have intermediates to build the certificate chain for their peer. Although it does not reveal any additional information about the peers, it might allow clients to be more effectively fingerprinted by peers or any passive observers in the network path. A mitigation against this concern is to encrypt the ClientHello in TLS 1.3 [ECH] which would hide the CA certificate suppression signal.\r\n> \r\n> Even when the  flag is encrypted in the handshake, a passive observer could fingerprint the peers by analyzing the TLS handshake data sizes flowing each direction. Widespread adoption of the mechanism described in this document will deem the use of the signal for fingerprinting impractical.",
+          "createdAt": "2023-08-02T02:15:18Z",
+          "updatedAt": "2023-08-02T02:15:18Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "ECH doesn't hide information from servers, which is an omission in that draft.",
+          "createdAt": "2023-08-02T02:57:08Z",
+          "updatedAt": "2023-08-02T02:57:08Z"
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "id": "I_kwDOJmBpI85sqxVa",
+      "title": "Include a link / reference to CRIME attacks",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/11",
+      "state": "CLOSED",
+      "author": "jhoyla",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "TLS suffered from the CRIME attacks related to encrypting compressed data. We should include a reference to the attack and include text as to why it doesn't apply, or a reference to the certificate compression RFC and a pointer to the text in that RFC. ",
+      "createdAt": "2023-07-26T20:56:51Z",
+      "updatedAt": "2024-02-29T13:39:39Z",
+      "closedAt": "2024-02-29T13:39:39Z",
+      "comments": []
+    },
+    {
+      "number": 12,
+      "id": "I_kwDOJmBpI85tNrUx",
+      "title": "Analysis on the benefit of pass 2 for PQ certs",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/12",
+      "state": "OPEN",
+      "author": "csosto-pk",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Also sent to the list https://mailarchive.ietf.org/arch/msg/tls/WWisIY9kXymZ6NVsevMe94IljxQ/ \r\n\r\nI tested this further for Dilithium and wanted to share the results. The TL;DR; is that compressing the leaf cert on top of compressing/omitting the CAs vs just compressing/omitting the CAs may only drop us below 9KB for Dilithium3 (non WebPKI). And that may not always be the case. All other non WebPKI or WebPKI cases will not see any significant benefit. Also, there is no case where compressing the leaf cert will drop us below the QUIC amplification limit. That is one reason why I am suggesting to differentiate between the leaf cert and the CA certs compression.\r\n\r\nAnother reason is that we should be able to use just compression of CA certs (pass 1) for non WebPKI cases where the CT leaf cert dictionary cannot be built (pass 2)\r\n\r\nMore details on the experiments follow. (Sorry for the length. )\r\n\r\nI tested with P256+Kyber512 with Dilithium2 certs and  P256+Kyber512 with Dilithium3 certs in TLS 1.3. My Dilithium certs did not include any SCTs (no WebPKI). Also, the cert were minimalistic without basic fields, EKUs, Cert Policies, CRLS,  SKI, AIA, complicated SANs etc. So my leaf cert was pretty slim other that the signature and public key and it was not \"compressible\" much.\r\n\r\n* P256_Kyber512 + Dilithium2:\r\n  - ClientHello = 1137B\r\n  - ServerHello + Server ChangeCipherSpec = 923+1=924B\r\n  - Server Certificates, Certificate Verify + Server Finished = 7868+2450=10318 B DER encoded CA and Server certs are 3.9KB each. That basically adds up to 1.3KB (Dilithium2 public key)+2.4(Dilithium2 signatures) + a little more for the rest of the cert fields which are small anyway. So a total chain is 7.8KB. To confirm intuitively, the Server Certificates, Certificate Verify + Server Finished roughly adds up to 10.318=7.8 (cert chain DER formatted)+2.4(Dilithium2 signature)+miniscule size of Finished message and other fields.  So, if we omitted the CA cert we would get 10.3-3.9=6.4KB. If we compressed the leaf cert fields further, we could save maximum another 0.5-1KB which is not even possible for these certs because they were really minimalistic. So we would definitely end up over 5KB which is way over 3xClientHello size. QUIC amplification would still kick in.\r\n\r\nRegarding the 9-10KB TLS 1.3 limit from Bas' blog post, at 6.4+1KB if we account for heavier certs, we would be way below 9KB by just omitting the CA certs even with heavier leaf certs than my minimalistic ones.\r\n\r\nSo, leaf compression on top of CA omission would not make a difference for the QUIC limit or the 9-10KB TLS 1.3 limit.\r\n\r\nNow, for WebPKI, if we add 2 more Dilithium2 signatures 2*2.4=4.8KB, it would take us to 6.4+4.8=11.2KB by just omitting the CA certs. If we compress the leaf fields on top of that and we save 0.5-1KB more KB, we still stay over both the QUIC and the TLS limit. So for WebPKI, compressing the leaf fields does not buy us much.\r\n\r\n* P384_Kyber768 + Dilithium3:\r\n  - ClientHello = 1554B\r\n  - ServerHello + Server ChangeCipherSpec = 1271+1=1272B\r\n  - Server Certificates, Certificate Verify + Server Finished = 10894+3323=14217B DER encoded CA and Server certs are 5.4KB each. That basically adds up to 1.9KB (Dilithium3 public key)+3.3(Dilithium3 signatures) + a little more for the rest of the cert fields which are small anyway. So a total chain is 10.8KB. To confirm intuitively, the Server Certificates, Certificate Verify + Server Finished roughly adds up to 14.217=10.8 (cert chain DER formatted)+3.3(Dilithium3 signature)+miniscule size of Finished message and other fields. So, if we omitted the CA cert we would get 8.8KB. If we compressed the leaf cert fields further, we could gain maximum another 0.5-1KB which is not even possible for these certs because they were really minimal. So we would end up around 8KB which is way over 3xClientHello size. QUIC amplification would kick in.\r\n\r\nRegarding the 9-10KB TLS 1.3 limit from Bas' blog post, compression could get us around 8KB although I think this would be a stretch. It is probably more realistic to say it would be around 9KB with real leaf certs heavier than my minimalistic ones. So, TLS 1.3 could see a benefit in some cases, not in others depending on the leaf cert bloat.\r\n\r\nSo leaf compression on top of CA omission would not put us below the QUIC amplification limit. It could make a difference for the 9-10KB TLS 1.3 limit depending on the leaf cert bloat.\r\n\r\nNow, for WebPKI, if we add 2 more Dilithium3 signatures 2*3.3=6.6KB, it would take us to 8.8+6.6=16.4KB by just omitting the CA certs. If we compress the leaf fields on top of that and we save 0.5-1KB  more KB, we still stay over both the QUIC and the TLS limit. So for WebPKI, compressing the leaf fields does not buy us anything.\r\n\r\n\r\n",
+      "createdAt": "2023-08-02T02:11:41Z",
+      "updatedAt": "2023-08-02T02:11:41Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 14,
+      "id": "I_kwDOJmBpI86AYze6",
+      "title": "Ensure certificate listing filter does not remove chained intermediates. ",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/14",
+      "state": "CLOSED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@csosto-pk: \r\n\r\n> Btw, in 3.1.1 I noticed \r\n> - \"Remove all intermediate certificates which are not signed by root certificates still in the listing.\"\r\n> That could eliminate some 2+ ICA cert chains. Any reason why?\r\n\r\n@dennisjackson: \r\n\r\n> Whoops, that's a good spot. The intent here was just to remove any intermediates which no longer chained back to trusted roots, so I'll fix the wording.\r\n",
+      "createdAt": "2024-02-26T11:49:29Z",
+      "updatedAt": "2024-02-29T14:43:47Z",
+      "closedAt": "2024-02-29T14:43:47Z",
+      "comments": []
+    },
+    {
+      "number": 15,
+      "id": "I_kwDOJmBpI86AZBCT",
+      "title": "Editorial Feedback",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/15",
+      "state": "CLOSED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@ekr: \r\n\r\n>> S 1.1.\r\n   The existing compression schemes used in [TLSCertCompress] have been\r\n   shown to deliver a substantial improvement in QUIC handshake latency\r\n   [FastlyStudy], [QUICStudy] by reducing the size of server's\r\n   certificate chain and so fitting the server's initial messages within\r\n   a single flight.  However, in a post-quantum setting, the signatures\r\n   and public keys used in a TLS certificate chain will be typically 10\r\n   to 40 times their current size and cannot be compressed with existing\r\n   TLS Certificate Compression schemes.\r\n> \r\n> Perhaps \"because most of the size of the certificate is in high entropy fields such as cryptographic keys and signatures\".\r\n\r\n-- \r\n\r\n>>  S 1.2.\r\n   This draft introduces a new TLS certificate compression scheme\r\n   [TLSCertCompress] which is intended specifically for WebPKI\r\n   applications.  It uses a predistributed dictionary consisting of all\r\n\r\n> I would note specifically at this point that this fits into the existing compression scheme negotiation structure, as one otherwise needs to look to see what TLSCertCompress goes to.\r\n\r\n-- \r\n\r\n>>  Note that as this is only a compression scheme, it does not impact\r\n   any trust decisions in the TLS handshake.  A client can offer this\r\n   compression scheme whilst only trusting a subset of the certificates\r\n   in the CCADB certificate listing, similarly a server can offer this\r\n   compression scheme whilst using a certificate chain which does not\r\n   chain back to a WebPKI root.  Furthermore, new root certificates are\r\n   typically included in the CCADB at the start of their application to\r\n   a root store, a process which typically takes more than a year.\r\n   Consequently, applicant root certificates can be added to new\r\n   versions of this scheme ahead of any trust decisions, allowing new\r\n   CAs to compete on equal terms with existing CAs.\r\n> \r\n> Perhaps add \"as soon as they are approved for entry into the root\r\nprogram.\"\r\n\r\n-- \r\n\r\n>> S 3.2.1.1.\r\n   These parameters are recommended in order to achieve the best\r\n   compression ratio however implementations MAY use their preferred\r\n   parameters as these parameters are not used during decompression.\r\n>\r\n> Perhaps \"as long as the value of those parameters does not influence\r\ndecompression\".",
+      "createdAt": "2024-02-26T12:17:37Z",
+      "updatedAt": "2024-02-29T13:25:52Z",
+      "closedAt": "2024-02-29T13:25:51Z",
+      "comments": []
+    },
+    {
+      "number": 16,
+      "id": "I_kwDOJmBpI86AZFy9",
+      "title": "Longterm versioning strategy",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/16",
+      "state": "OPEN",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "@thomwiggers: \r\n\r\n> The one thing that makes me frown a bit is the intended versioning scheme. I don't think consuming identifiers is a problem, but perhaps we can pre-define the code points and variables for the next, say, N=0xff years? Then the versioning mechanism is set for the foreseeable future. (You could even say that we wrap the code points after N years).\r\n\r\nAs well as the discussion on the mailing list, this was also discussed during the tlswg meeting @ IETF 117. There was no particular consensus on the most suitable strategy. \r\n\r\nA related issue is whether this draft will slow rotation of intermediate certificates. As discussed in Appendix B and at the IETF 117 Presentation, this might mean using an extension and dynamic negotiation is more suitable. ",
+      "createdAt": "2024-02-26T12:27:55Z",
+      "updatedAt": "2024-03-01T12:48:18Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 17,
+      "id": "I_kwDOJmBpI86AZHtE",
+      "title": "Handling normative dependencies on opaque binary data",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/17",
+      "state": "OPEN",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "As discussed during the tlswg meeting at IETF 117 and identified in the draft, there isn't a clear best way to reference the binary data necessary to implement this scheme. \r\n\r\nOne option take by [RFC 7932 (Brotli)](https://datatracker.ietf.org/doc/html/rfc7932) is to append 122 KB of hex encoded data to the end of the RFC occupying some 80 pages: \r\n\r\n```\r\n The hexadecimal form of the DICT array is the following, where the\r\n   length is 122,784 bytes and the CRC-32 of the byte sequence is\r\n   0x5136cb04.\r\n\r\n      74696d65646f776e6c6966656c6566746261636b636f64656461746173686f77\r\n      6f6e6c7973697465636974796f70656e6a7573746c696b6566726565776f726b\r\n      74657874796561726f766572626f64796c6f7665666f726d626f6f6b706c6179\r\n      ...\r\n```",
+      "createdAt": "2024-02-26T12:32:01Z",
+      "updatedAt": "2024-02-26T12:32:01Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 18,
+      "id": "I_kwDOJmBpI86AZJOq",
+      "title": "Ilari Liusvaara's review",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/18",
+      "state": "CLOSED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "> \r\n> Section 3.1.2:\r\n> \r\n> - It is not clear what exactly is replaced if cert_data is known.\r\n>   Obviously overriding the length field would be more compact, but it\r\n>   also can be interpreted as replacing the value, wasting 3 bytes.\r\n> \r\n>   (Reminds me of RFC 8879, which is not clear about similar things.)\r\n> \r\n> - CertificateEntry and Certificate length fields are just waste of\r\n>   space, since both can be recovered in other ways when decoding.\r\n> \r\n> - RFC 8879 does not allow ignoring unrecognized three-byte identifiers.\r\n>   Instead, the connection MUST be terminated with bad_certificate alert.\r\n> \r\n>   This has consequence that any client that can ever add a custom trust\r\n>   anchor via any means must have the complete certificate list (whereas\r\n>   partial list would be enough if no custom trust anchors can ever be\r\n>   added).\r\n> \r\n>   And I find the last comment about transcript validation failing very\r\n>   scary.\r\n> \r\n> \r\n> Section 3.2.:\r\n> \r\n> - Using alternate scheme could result drastically reduced implementation\r\n>   complexity.\r\n> \r\n>   Furthermore, one can't even use standard zstd decoder with this due to\r\n>   security reasons. One needs special one (but seems like reference zstd\r\n>   library ships that as alternative API).\r\n> \r\n> \r\n> Section 3.2.1.:\r\n> \r\n> - I suspect that having CA-specific dictionaries would make it much\r\n>   easier to be equitable and improve compression.\r\n> \r\n>   Then I don't think the dictionary construction method is good:\r\n>  \r\n>   * Using just one certificate is very dubious.\r\n>   * It is more optimal to consider byte substrings with no structure.\r\n> \r\n> Section 3.2.1.1.:\r\n> \r\n> - Caching monolithic compression from startup does not work because of\r\n>   extension fields.\r\n> \r\n>   For caching to work, one would have to compress the certificate\r\n>   entries independently and leave the extension fields in between\r\n>   uncompressed.\r\n> \r\n> Section 5.1.:\r\n> \r\n> - I think the argument about adding roots taking time is flawed. Roots\r\n>   are usually not even included in the chain, but intermediates are,\r\n>   and can change much faster.\r\n> \r\n>   I remember seeing one CA that judging from naming of the intermediate\r\n>   rotated it every 6 months.\r\n> \r\n> \r\n> Section 5.4:\r\n> \r\n> - I think the current complexity as I understand the draft is just\r\n>   scary.\r\n> \r\n>   I consider not being able to adjust extension fields in the fly to\r\n>   be a hard blocker (that is already a hard blocker for implementing\r\n>   RFC 8879 sending side).",
+      "createdAt": "2024-02-26T12:34:56Z",
+      "updatedAt": "2024-03-01T12:49:30Z",
+      "closedAt": "2024-03-01T12:49:30Z",
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Split between #22, #7, #12, #16 and other comments addressed on the mailing list. ",
+          "createdAt": "2024-03-01T12:49:30Z",
+          "updatedAt": "2024-03-01T12:49:30Z"
+        }
+      ]
+    },
+    {
+      "number": 20,
+      "id": "I_kwDOJmBpI86A01Rq",
+      "title": "Feature Creep: Consider introducing padding",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/20",
+      "state": "OPEN",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Although certificate messages are encrypted in TLS1.3, their length leaks information about which server is being visited. This leakage could be mitigated with padding introduced via Certificate Compression, at the cost of complicating the implementation and a minor size overhead.\r\n\r\nAs a hypothetical, using the [Padme scheme](https://arxiv.org/pdf/1806.03160.pdf) with a maximum message size of 1500 B would give a leakage of ~3 bits and a maximum overhead of 5%. ",
+      "createdAt": "2024-02-29T13:57:58Z",
+      "updatedAt": "2024-02-29T13:57:58Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 22,
+      "id": "I_kwDOJmBpI86A8cJ4",
+      "title": "Handling of unrecognized identifiers",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/22",
+      "state": "OPEN",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "As noted by Ilari in #18, there's a possible ambiguity with the use of three byte identifiers in this draft. Although currently three byte `cert_data` entries are not possible with X509, this could hypothetically change. \r\n\r\nI can see a few options:\r\n\r\na) Since there is currently no valid 3-byte cert_data payload when using X.509 certs, require compression to fail if any 3-byte payload is seen. Then decompression can fail if any unrecognized 3-byte payload is seen. This effectively 'reserves' all three byte length sequences for this draft.\r\n\r\nb) Require compression to fail if 3-byte payload passed to the compression algorithm would clash with an identifier in the scheme. Then decompression can safely ignore any unrecognised 3-byte identifier - since it was present in the original uncompressed Certificate message. \r\n\r\nc) As in b) but 'reserve' some space of identifiers, e.g. 3 bytes beginning 0xff etc. \r\n\r\nI slightly prefer b) or c) although this is additional implementation complexity for a code path which is likely to never be used in practice. ",
+      "createdAt": "2024-03-01T12:43:54Z",
+      "updatedAt": "2024-03-01T12:43:54Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 23,
+      "id": "I_kwDOJmBpI86BBKkn",
+      "title": "Server doing only Pass 1 or 2?",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/23",
+      "state": "OPEN",
+      "author": "csosto-pk",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "What does the client do if the server only does Pass 1 and compresses / omits the chain certs but does not compress the end-entity certs (Pass 2)?\r\n\r\nThe client should be fine with that. It should be able to reconstruct the chain and used the uncompressed end-entity cert. It should not fail the handshake. \r\n\r\nI am suggesting for the Implementation Complexity Section to say something like\r\n\r\n> Servers MAY chose to compress just the cert chain or the end-certificate depending on their ability to perform Pass 1 or 2 respectively. Client MUST be able to process a compressed chain or an end-entity certificate independently. \r\n\r\nor something like that. \r\n",
+      "createdAt": "2024-03-02T04:04:40Z",
+      "updatedAt": "2024-03-05T04:14:55Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I can see two different ways to handle it. Either as you suggest, we have it be a runtime decision and we just prefix the compressed form with a byte to indicate whether pass 2 has been used. Alternatively, we can define two codepoints, (pass 1 + pass 2, pass 1).\r\n\r\nI'd suggest we gather performance figures first, then make a decision on the right way forward. ",
+          "createdAt": "2024-03-04T15:48:09Z",
+          "updatedAt": "2024-03-04T15:48:09Z"
+        },
+        {
+          "author": "csosto-pk",
+          "authorAssociation": "NONE",
+          "body": "Maybe these will not matter for the scenario I am considering:\r\n\r\nLet\u2019s say the client advertised support for draft-ietf-tls-cert-abridge. And the server sent back \r\n- CompressedCertificate which includes the 2 identifiers for the ICA and RootCA from Pass 1.\r\n- uncompressed, traditional CertificateEnty of the end-entity certificate\r\n\r\nOr it sent back\r\n\r\n- uncompressed, traditional CertificateEnties for the  ICA and RootCA certs\r\n- CompressedCertificate which includes the ZStandard compressed (based on the Pass2 dictionary) end-entity cert \r\n\r\nMy point is that nothing should prevent the client from being able to handle these two scenarios and normative language should point that out. Any software that can parse certs in compressed form, ought to be able to parse them in regular form if the server did not support Pass1 (CA cers were not available for some reason) or Pass2 (eg. if CT Logs were not available for some reason).\r\n\r\nAm I overseeing something?\r\n",
+          "createdAt": "2024-03-05T04:14:54Z",
+          "updatedAt": "2024-03-05T04:14:54Z"
+        }
+      ]
+    }
+  ],
+  "pulls": [
+    {
+      "number": 1,
+      "id": "PR_kwDOJmBpI85UMlPn",
+      "title": "Markdown-related tweaks",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/1",
+      "state": "MERGED",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Reference format.\r\nList format.\r\nA period at the end of a sentence.",
+      "createdAt": "2023-06-29T01:16:39Z",
+      "updatedAt": "2023-06-29T09:34:02Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "5b024835a075af5dfa2fefa74815acda39db9571",
+      "headRepository": "martinthomson/cert-abridge",
+      "headRefName": "md-stuff",
+      "headRefOid": "dea5870aeee6647c3963b2624cd8be874ab41075",
+      "closedAt": "2023-06-29T09:34:01Z",
+      "mergedAt": "2023-06-29T09:34:01Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "6f503cba4ddff7729f7f0ace828d203b32904daa"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOJmBpI85Zs0WR",
+          "commit": {
+            "abbreviatedOid": "dea5870"
+          },
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2023-06-29T09:32:10Z",
+          "updatedAt": "2023-06-29T09:32:10Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "id": "PR_kwDOJmBpI85UMlQX",
+      "title": "Title suggestion",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/2",
+      "state": "MERGED",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2023-06-29T01:16:44Z",
+      "updatedAt": "2023-06-29T10:01:21Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "5b024835a075af5dfa2fefa74815acda39db9571",
+      "headRepository": "martinthomson/cert-abridge",
+      "headRefName": "title",
+      "headRefOid": "22103b4c5b4078542a79820564879f6a262515fc",
+      "closedAt": "2023-06-29T10:01:20Z",
+      "mergedAt": "2023-06-29T10:01:20Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "ddbb88e1210e1da02d0ce3bfbe7cd80dd134baf6"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 5,
+      "id": "PR_kwDOJmBpI85UOjEw",
+      "title": "Format dates according to RFC 3339",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/5",
+      "state": "MERGED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #3 ",
+      "createdAt": "2023-06-29T10:34:51Z",
+      "updatedAt": "2023-06-29T10:37:14Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "ddbb88e1210e1da02d0ce3bfbe7cd80dd134baf6",
+      "headRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "headRefName": "dates",
+      "headRefOid": "a80cd619b7d4c6739a8fb09e8370068f49699352",
+      "closedAt": "2023-06-29T10:37:13Z",
+      "mergedAt": "2023-06-29T10:37:13Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "1cc052b1582a10a595556855ae7cbecd855cd504"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 9,
+      "id": "PR_kwDOJmBpI85Vg-bY",
+      "title": "Clarify which artifacts are 'output'.",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/9",
+      "state": "MERGED",
+      "author": "robstradling",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "See also https://mailarchive.ietf.org/arch/msg/tls/L-wLDsdZpvHpHQFR0c3mo2oyR4c/",
+      "createdAt": "2023-07-14T12:23:26Z",
+      "updatedAt": "2024-02-27T13:57:26Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "31cc351fdd29fede90cea8b9eee00ef9b5594673",
+      "headRepository": "robstradling/draft-jackson-tls-cert-abridge",
+      "headRefName": "clarify_what_is_output",
+      "headRefOid": "ca1744d1ee117b2f4c314298ca32a2b074edd69e",
+      "closedAt": "2024-02-27T12:01:17Z",
+      "mergedAt": "2024-02-27T12:01:17Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "6f7c9cddcba8a23db359771620a4ad8157d142fe"
+      },
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks!",
+          "createdAt": "2024-02-27T12:01:55Z",
+          "updatedAt": "2024-02-27T12:01:55Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 13,
+      "id": "PR_kwDOJmBpI85eL6k3",
+      "title": "Handle edge case where dict versions can disagree on index",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/13",
+      "state": "CLOSED",
+      "author": "jmcrawford45",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Reading step 7 \"Order the list by the date each certificate was included in the CCADB, breaking ties with the lexicographic ordering of the SHA256 certificate fingerprint.\" along with some of the later assumptions on newer versions of the dictionary agreeing on existing keys, I believe there's an edge case where a snapshot occurs during a day in which multiple entries are added to CCADB. I am picturing a scenario where two CAs are added on a snapshot date (one before and one after a snapshot where the latter has a digest lexicographically preceding the former). In this scenario, future snapshots would have a different list index than the older snapshot from the addition date, causing verification failure after decompression. I've added an additional condition that should avoid this edge case at a minimal cost that still preserves the rest of the algorithm.",
+      "createdAt": "2023-10-31T04:00:23Z",
+      "updatedAt": "2024-03-06T12:40:19Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "6f7c9cddcba8a23db359771620a4ad8157d142fe",
+      "headRepository": "jmcrawford45/draft-ietf-tls-cert-abridge",
+      "headRefName": "patch-1",
+      "headRefOid": "abde7f74a447d6a46b5cade1a573d1f3f72e4c69",
+      "closedAt": "2024-03-06T12:40:19Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "That's a good point about the ambiguity. Rather than add an extra step, I'd rather clarify that we use the timestamp of when the certificate was first included. We know this is behind the cutoff of `CCADB_SNAPSHOT_TIME`. Does the PR in #19 address the concern adequately? ",
+          "createdAt": "2024-02-29T13:17:02Z",
+          "updatedAt": "2024-02-29T13:17:02Z"
+        },
+        {
+          "author": "dennisjackson",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Closed in favour of #19 ",
+          "createdAt": "2024-03-06T12:40:19Z",
+          "updatedAt": "2024-03-06T12:40:19Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 19,
+      "id": "PR_kwDOJmBpI85oSvke",
+      "title": "Clarify certificate ordering",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/19",
+      "state": "MERGED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-02-29T13:14:42Z",
+      "updatedAt": "2024-03-06T12:39:31Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "6f7c9cddcba8a23db359771620a4ad8157d142fe",
+      "headRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "headRefName": "certificate-ordering",
+      "headRefOid": "aff2724dba606c395ff4ee24bf8042a7d48aba32",
+      "closedAt": "2024-03-06T12:39:31Z",
+      "mergedAt": "2024-03-06T12:39:31Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "03c6b9980217bf6fa12d1810717295957f65d611"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 21,
+      "id": "PR_kwDOJmBpI85oTTIu",
+      "title": "Add privacy considerations and fingerprinting. Resolves #10",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/21",
+      "state": "MERGED",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-02-29T14:26:17Z",
+      "updatedAt": "2024-03-06T12:39:43Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "2a99b983242ee2bbfc96736b106d04a6b2ea6d63",
+      "headRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "headRefName": "privacy-considerations",
+      "headRefOid": "caf1eea36e06965165fa06f63c63e9bf1caa9fda",
+      "closedAt": "2024-03-06T12:39:43Z",
+      "mergedAt": "2024-03-06T12:39:43Z",
+      "mergedBy": "dennisjackson",
+      "mergeCommit": {
+        "oid": "56d1de64d244629fdb3426002662527aab974871"
+      },
+      "comments": [],
+      "reviews": []
+    }
+  ]
+}
