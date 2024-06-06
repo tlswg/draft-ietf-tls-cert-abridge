@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-06-04T00:36:37.194054+00:00",
+  "timestamp": "2024-06-06T00:36:17.888319+00:00",
   "repo": "tlswg/draft-ietf-tls-cert-abridge",
   "labels": [
     {
@@ -332,9 +332,17 @@
       "labels": [],
       "body": "As noted by Ilari in #18, there's a possible ambiguity with the use of three byte identifiers in this draft. Although currently three byte `cert_data` entries are not possible with X509, this could hypothetically change. \r\n\r\nI can see a few options:\r\n\r\na) Since there is currently no valid 3-byte cert_data payload when using X.509 certs, require compression to fail if any 3-byte payload is seen. Then decompression can fail if any unrecognized 3-byte payload is seen. This effectively 'reserves' all three byte length sequences for this draft.\r\n\r\nb) Require compression to fail if 3-byte payload passed to the compression algorithm would clash with an identifier in the scheme. Then decompression can safely ignore any unrecognised 3-byte identifier - since it was present in the original uncompressed Certificate message. \r\n\r\nc) As in b) but 'reserve' some space of identifiers, e.g. 3 bytes beginning 0xff etc. \r\n\r\nI slightly prefer b) or c) although this is additional implementation complexity for a code path which is likely to never be used in practice. ",
       "createdAt": "2024-03-01T12:43:54Z",
-      "updatedAt": "2024-03-01T12:43:54Z",
+      "updatedAt": "2024-06-05T14:07:38Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "Lekensteyn",
+          "authorAssociation": "NONE",
+          "body": "While reading through the current -01 draft, I was surprised to see this ambiguity:\r\n\r\n> Unrecognized three-byte identifiers are ignored.\r\n\r\nI would be in favor of (a) which is also simple. By definition, the DER encoding of an X.509 certificate is longer than three bytes: https://www.rfc-editor.org/rfc/rfc5280#section-4.1",
+          "createdAt": "2024-06-05T14:07:36Z",
+          "updatedAt": "2024-06-05T14:07:36Z"
+        }
+      ]
     },
     {
       "number": 23,
