@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-06-13T00:37:07.400591+00:00",
+  "timestamp": "2024-06-16T00:40:35.679206+00:00",
   "repo": "tlswg/draft-ietf-tls-cert-abridge",
   "labels": [
     {
@@ -605,6 +605,32 @@
       "mergeCommit": {
         "oid": "56d1de64d244629fdb3426002662527aab974871"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 24,
+      "id": "PR_kwDOJmBpI85yfPtH",
+      "title": "Delete .editorconfig",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/pull/24",
+      "state": "CLOSED",
+      "author": "erosmary",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-06-14T14:15:57Z",
+      "updatedAt": "2024-06-14T14:16:09Z",
+      "baseRepository": "tlswg/draft-ietf-tls-cert-abridge",
+      "baseRefName": "main",
+      "baseRefOid": "56d1de64d244629fdb3426002662527aab974871",
+      "headRepository": "erosmary/draft-ietf-tls-cert-abridge",
+      "headRefName": "patch-1",
+      "headRefOid": "e9ccc846e7ffda08fb0ca5b5310895edd997a0e6",
+      "closedAt": "2024-06-14T14:16:09Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
