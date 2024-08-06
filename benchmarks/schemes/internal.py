@@ -104,7 +104,7 @@ class BrotliWrapper:
         return self.compress_bytes(b"".join(cert_chain))
 
     def compress_bytes(self, raw_bytes):
-        return brotli.compress(raw_bytes)
+        return brotli.compress(raw_bytes,quality=11,lgwin=17)
 
     def decompress(self, compressed_data):
         # TODO Not Implemented
