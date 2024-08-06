@@ -4,8 +4,8 @@
 
 Transport Layer Security                                      D. Jackson
 Internet-Draft                                                   Mozilla
-Intended status: Experimental                               6 March 2024
-Expires: 7 September 2024
+Intended status: Experimental                              6 August 2024
+Expires: 7 February 2025
 
 
               Abridged Compression for WebPKI Certificates
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 September 2024.
+   This Internet-Draft will expire on 7 February 2025.
 
 Copyright Notice
 
@@ -837,10 +837,9 @@ Table of Contents
 
    [SCAStudy] Kampanakis, P. and M. Kallitsis, "Faster Post-Quantum TLS
               Handshakes Without Intermediate CA Certificates", Springer
-              International Publishing, Cyber Security, Cryptology, and
-              Machine Learning pp. 337-355,
-              DOI 10.1007/978-3-031-07689-3_25, ISBN ["9783031076886",
-              "9783031076893"], 2022,
+              International Publishing, Lecture Notes in Computer
+              Science pp. 337-355, DOI 10.1007/978-3-031-07689-3_25,
+              ISBN ["9783031076886", "9783031076893"], 2022,
               <https://doi.org/10.1007/978-3-031-07689-3_25>.
 
    [ZstdImpl] Facebook, "ZStandard (Zstd)", 5 June 2023,
