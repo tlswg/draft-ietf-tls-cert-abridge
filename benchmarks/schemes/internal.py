@@ -1,10 +1,8 @@
 import logging
 
 import zstandard
+import brotli
 from schemes.certs import is_ca_cert, report_missing_ca_cert, parse_der_to_cert
-
-
-ZSTD_LEVEL = 22
 
 # TODO Using quick parameters during development
 ZSTD_TRAINING_SPEED = 10
@@ -46,23 +44,30 @@ class DictCompress:
 
 
 class ZstdWrapper:
-    def __init__(self, shared_dict=None):
+    def __init__(self, shared_dict=None, offline_compression=False):
         # self.dictBytes = zstandard.ZstdCompressionDict(shared_dict)
-        params = zstandard.ZstdCompressionParameters(
-            chain_log=30,
-            search_log=30,
-            hash_log=30,
-            target_length=6000,
-            threads=1,
-            compression_level=ZSTD_LEVEL,
-            force_max_window=1,
-        )
+        self.offlineCompression = offline_compression
+        if offline_compression:
+            params = zstandard.ZstdCompressionParameters(
+                chain_log=30,
+                search_log=30,
+                hash_log=30,
+                target_length=6000,
+                threads=1,
+                compression_level=22,
+                force_max_window=1,
+            )
+        else:
+            params = zstandard.ZstdCompressionParameters(
+                threads=1,
+                compression_level=3,
+            )
         self.comp = zstandard.ZstdCompressor(
             compression_params=params, dict_data=shared_dict
         )
 
     def name(self):
-        return "Base: Zstandard"
+        return f"Base: Zstandard + Offline Compression:{self.offlineCompression}"
 
     def compress(self, cert_chain):
         return self.compress_bytes(b"".join(cert_chain))
@@ -74,17 +79,34 @@ class ZstdWrapper:
         # TODO Not Implemented
         return b""
 
-
-def zstandard_train_dict(samples, target_size):
+def zstandard_train_dict(samples, target_size,offline_compression):
     logging.info(
         f"Training a zstd dictionary of {target_size} bytes over {len(samples)} samples"
     )
     return zstandard.train_dictionary(
         target_size,
         samples,
-        level=ZSTD_LEVEL,
+        level=22 if offline_compression else 3,
         notifications=1,
         threads=-1,
         accel=ZSTD_TRAINING_SPEED,
         steps=ZSTD_TRAINING_STEPS,
     )
+
+class BrotliWrapper:
+    def __init__(self):
+        pass
+
+    def name(self):
+        return f"Base: Brotli"
+
+    def compress(self, cert_chain):
+        return self.compress_bytes(b"".join(cert_chain))
+
+    def compress_bytes(self, raw_bytes):
+        return brotli.compress(raw_bytes)
+
+    def decompress(self, compressed_data):
+        # TODO Not Implemented
+        return b""
+

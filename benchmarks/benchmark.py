@@ -29,17 +29,22 @@ def load_schemes():
         schemes.existing.HypotheticalOptimimum(),
         # This Draft
         schemes.abridged.PrefixOnly(),
-        schemes.abridged.Baseline(),
+        schemes.abridged.PrefixAndZstd(offlineCompression=False),
+        schemes.abridged.PrefixAndZstd(offlineCompression=True),
+        schemes.abridged.PrefixAndBrotli(),
+        schemes.abridged.Baseline(offlineCompression=True),
+        schemes.abridged.Baseline(offlineCompression=False),
     ]
     # Optimal when compared against dictionary sizes of 1k, 10k, 100k, 200k
     # Using redaction to avoid favouring certain websites
-    compressors += [schemes.abridged.PrefixAndTrained(dict_size=3000, redact=True)]
-    compressors += [schemes.abridged.PrefixAndTrained(dict_size=100000, redact=True)]
+    compressors += [schemes.abridged.PrefixAndTrained(dict_size=3000, redact=True, offlineCompression=True)]
+    compressors += [schemes.abridged.PrefixAndTrained(dict_size=100000, redact=True, offlineCompression=True)]
 
     # Optimal when compared against thresholds of 1,10,100 and 1000
     compressors += [schemes.abridged.PrefixAndCommon(threshold=2000)]
 
-    compressors += [schemes.abridged.PrefixAndSystemic()]
+    compressors += [schemes.abridged.PrefixAndSystemic(offlineCompression=True)]
+    compressors += [schemes.abridged.PrefixAndSystemic(offlineCompression=False)]
     return compressors
 
 
