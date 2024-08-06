@@ -23,3 +23,4 @@ draft-jackson-tls-cert-abridge.xml
 package-lock.json
 report.xml
 !requirements.txt
+/benchmarks/.venv
