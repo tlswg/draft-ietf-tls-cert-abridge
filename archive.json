@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-08-06T00:38:56.672450+00:00",
+  "timestamp": "2024-08-08T00:39:16.754267+00:00",
   "repo": "tlswg/draft-ietf-tls-cert-abridge",
   "labels": [
     {
@@ -374,6 +374,22 @@
           "updatedAt": "2024-03-05T04:14:54Z"
         }
       ]
+    },
+    {
+      "number": 25,
+      "id": "I_kwDOJmBpI86SGGVz",
+      "title": "Zstd Compression Levels",
+      "url": "https://github.com/tlswg/draft-ietf-tls-cert-abridge/issues/25",
+      "state": "OPEN",
+      "author": "dennisjackson",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The current recommendations for higher levels for Zstd don't actually make a meaningful difference now that the compression is done in two passes. The text recommending higher levels should be removed. ",
+      "createdAt": "2024-08-06T14:44:10Z",
+      "updatedAt": "2024-08-06T14:44:10Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
