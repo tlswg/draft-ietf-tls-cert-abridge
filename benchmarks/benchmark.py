@@ -27,6 +27,8 @@ def load_schemes():
         schemes.existing.IntermediateSuppression(),
         schemes.existing.ICAAndTLS(),
         schemes.existing.HypotheticalOptimimum(),
+        schemes.existing.MetadataEstimate(),
+        schemes.existing.LeafDomainNames(),
         # This Draft
         schemes.abridged.PrefixOnly(),
         schemes.abridged.PrefixAndZstd(offlineCompression=False),
